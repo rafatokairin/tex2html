@@ -19,7 +19,7 @@ tex_file_path = os.path.abspath(tex_file_name)
 html_content = convert_tex_to_html(tex_file_path)
 
 if html_content is not None:
-    with open('documento.html', 'w', encoding='utf-8') as f:
+    with open(f"{os.path.splitext(tex_file_name)[0]}.html", 'w', encoding='utf-8') as f:
         f.write('<!DOCTYPE html>\n')
         f.write('<html lang="en-US">\n')
         f.write('<head>\n')
