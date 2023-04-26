@@ -11,7 +11,6 @@ def convert_tex_to_html(tex_file_path):
         print(f'Ocorreu um erro durante a conversão: {e}')
         return None
 
-
 # Nome do arquivo .tex de entrada (assumindo que esteja na mesma pasta do arquivo Python)
 tex_file_name = 'main.tex'
 # Caminho do arquivo .tex de entrada
