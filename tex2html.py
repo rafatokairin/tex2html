@@ -25,6 +25,8 @@ if html_content is not None:
         f.write('<head>\n')
         # Biblioteca MathJax
         f.write('<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>\n')
+        # CSS
+        f.write('<link rel="stylesheet" type="text/css" href="style.css">\n')
         f.write('<meta charset="utf-8">\n')
         f.write('</head>\n')
         f.write('<body>\n')
