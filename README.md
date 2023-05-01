@@ -6,9 +6,9 @@
 
 - para instalar bibliotecas use os comandos:
 
--- pip install pypandoc --pre
+pip install pypandoc --pre
 
--- pip install beautifulsoup4
+pip install beautifulsoup4
 
 - a opção --mathjax gera fórmulas matemáticas em formato mathml, o mathjax é uma biblioteca javascript que é usada para exibir fórmulas matemáticas em páginas da web.
 
