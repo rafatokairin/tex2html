@@ -1,0 +1,101 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans, Ubuntu, Droid Sans, Helvetica Neue, sans-serif;
+    word-break: normal;
+    line-height: 2;
+    width: 80vw;
+    margin: 0 auto;
+    text-align: justify;
+    font-size: 15px;
+    margin-left: 220px;
+}
+
+h1 {
+    border-bottom: 2px solid #c4c4c4;
+    font-weight: 400;
+}
+
+h2, h3, h4, h5, h6 {
+    font-weight: 400;
+}
+
+figure {
+    text-align: center;
+}
+
+table {
+    margin: 0 auto;
+}
+
+th {
+    font-weight: 500;
+}
+
+img {
+    width: 300px;
+}
+
+a {
+    color: #3498db;
+}
+
+#index {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 20px;
+}
+
+#index h2 {
+    margin-left: 20px;
+    margin-right: 20px;
+    height: 20px;
+    font-weight: 350;
+    font-size: 18px;
+}
+
+#index li a {
+    text-decoration: none;
+    color: #3498db;
+    font-size: 15px;
+}
+
+@media screen and (max-width: 1200px) {
+    body {
+        width: 95vw;
+        height: 95vw;
+        font-size: 25px;
+        margin-left: 20px;
+        margin-right: 20px;
+        line-height: 1.5;
+    }
+
+    figure {
+        text-align: center;
+    }
+
+    img {
+        width: 95vw;
+    }
+
+    figure {
+        text-align: center;
+    }
+
+    table {
+        max-width: 95vw;
+        margin: 0 auto;
+    }
+
+    td, th {
+        width: 25%;
+        padding: 10px;
+        text-align: center;
+    }
+
+    #index {
+        display: none;
+    }
+}
