@@ -9,6 +9,14 @@ body {
     margin-left: 220px;
 }
 
+div[class^="figure"] {
+    text-align: center;
+}
+
+p {
+    text-align: left;
+}
+
 h1 {
     border-bottom: 2px solid #c4c4c4;
     font-weight: 400;
