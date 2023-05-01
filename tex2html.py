@@ -8,11 +8,13 @@ def convert_tex_to_html(tex_file_path):
         output = pypandoc.convert_file(tex_file_path, 'html', extra_args=['--mathjax'])
         soup = BeautifulSoup(output, 'html.parser')
         h1_list = [h1.get_text() for h1 in soup.find_all('h1')]
-        h1_list = [h1.replace(' ', '-') for h1 in h1_list]
+        h1_list = [h1.lstrip() if h1.startswith(' ') else h1 for h1 in h1_list]
+        h1_list = [h1.rstrip().replace(' ', '-') if h1.endswith(' ') else h1.replace(' ', '-') for h1 in h1_list]
         return str(soup), h1_list
     except Exception as e:
         print(f'Ocorreu um erro durante a conversão: {e}')
         return None, None
+
 
 # Nome do arquivo .tex de entrada (assumindo que esteja na mesma pasta do arquivo Python)
 tex_file_name = 'main.tex'
