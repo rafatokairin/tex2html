@@ -13,8 +13,9 @@ div[class^="figure"] {
     text-align: center;
 }
 
-p {
-    text-align: left;
+strong {
+    text-align: justify;
+    font-weight: 500;
 }
 
 h1 {
