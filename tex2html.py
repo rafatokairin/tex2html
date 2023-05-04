@@ -1,11 +1,20 @@
 import os
 import pypandoc
 from bs4 import BeautifulSoup
+import re
 
-def convert_tex_to_html(tex_file_path):
+# Nome do arquivo .tex de entrada (assumindo que esteja na mesma pasta do arquivo Python)
+tex_file_name = 'main.tex'
+
+# Lê o arquivo de entrada e remove os asteriscos
+with open(tex_file_name, "r", encoding="utf-8") as f:
+    conteudo = f.read()
+    conteudo_sem_asteriscos = re.sub(r"\\(begin|end){([^}\s]+)\*}", r"\\\1{\2}", conteudo)
+
+def convert_tex_to_html(tex_content):
     try:
-        # Converte o arquivo .tex para .html com a opcao --mathjax e encontra e armazena todos h1 em um vetor de strings
-        output = pypandoc.convert_file(tex_file_path, 'html', extra_args=['--mathjax'])
+        # Converte o conteúdo .tex para .html com a opcao --mathjax e encontra e armazena todos h1 em um vetor de strings
+        output = pypandoc.convert_text(tex_content, 'html', format='tex', extra_args=['--mathjax'])
         soup = BeautifulSoup(output, 'html.parser')
         h1_list = [h1.get_text() for h1 in soup.find_all('h1')]
         h1_list = [h1.lstrip() if h1.startswith(' ') else h1 for h1 in h1_list]
@@ -15,12 +24,8 @@ def convert_tex_to_html(tex_file_path):
         print(f'Ocorreu um erro durante a conversão: {e}')
         return None, None
 
-# Nome do arquivo .tex de entrada (assumindo que esteja na mesma pasta do arquivo Python)
-tex_file_name = 'main.tex'
-# Caminho do arquivo .tex de entrada
-tex_file_path = os.path.abspath(tex_file_name)
 # Chame a função para realizar a conversão
-html_content, h1_list = convert_tex_to_html(tex_file_path)
+html_content, h1_list = convert_tex_to_html(conteudo_sem_asteriscos)
 
 if html_content is not None:
     with open(f"{os.path.splitext(tex_file_name)[0]}.html", 'w', encoding='utf-8') as f:
