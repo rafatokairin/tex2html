@@ -4,6 +4,10 @@
 
 - beautifulsoup é uma biblioteca em python que extrai informações de .html.
 
+- re é uma biblioteca em python que permite a substituição de padrões de texto em strings.
+
+- os é uma biblioteca em python que permite a manipulação de arquivos.
+
 - para instalar bibliotecas use os comandos:
 
   > pip install pypandoc --pre
