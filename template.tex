@@ -1,0 +1,442 @@
+%----------------------------------------------------------%
+%          TEMPLATE - REVISTA SEMINA (26/01/2018)          %
+%----------------------------------------------------------%
+
+% CLASSE DE DOCUMENTO
+\PassOptionsToPackage{bookmarks=false}{hyperref}
+\documentclass[article,10pt,twoside,a4paper,twocolumn,hidelinks,english,brazil]{abntex2}
+
+% PACOTES
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{indentfirst}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{soulutf8}
+\usepackage{mathptmx}
+\usepackage{titling}
+\usepackage{etoolbox}
+\usepackage{titlesec}
+\usepackage{ragged2e}
+\usepackage{float}
+\usepackage[labelfont=bf,format=plain,justification=justified,singlelinecheck=false]{caption}
+\usepackage[bookmarks=false]{hyperref}
+\usepackage{helvet}
+\usepackage[alf,bibjustif,abnt-etal-list=0,abnt-etal-cite]{abntex2cite}
+%\usepackage[brazilian,hyperpageref]{backref}
+%\usepackage[alf,bibjustif,abnt-etal-list=0,abnt-etal-cite]{abntcite}
+
+\usepackage{amsmath,amssymb,amsthm} 
+\usepackage{graphicx}
+\usepackage{lastpage}
+\usepackage{multirow}
+
+
+%\addbibresource
+
+%\usepackage[alf]{abntex2cite}
+%\usepackage{amsmath}
+\usepackage{wrapfig}
+%\usepackage[hang]{footmisc}
+%%%%incluido
+%\usepackage[num,overcite]{abntex2cite}
+%\citebrackets[]
+\usepackage{url}  % pacote para quebrar linha da URL
+
+% ABSTRACT
+\makeatletter
+\renewenvironment{abstract}{%
+  \if@twocolumn
+    \else
+    \small
+    \begin{center}%
+      {\bfseries \large \abstractname\vspace{-.5em}\vspace{\z@}}%
+    \end{center}%
+    \quotation
+  \fi}
+{\if@twocolumn\else\endquotation\fi}
+\makeatother
+
+% MARGENS ESQUERDA, DIREITA, SUPERIOR E INFERIOR
+\setlrmarginsandblock{2.5cm}{2cm}{*}
+\setulmarginsandblock{2cm}{2.3cm}{*}
+\checkandfixthelayout
+
+% OUTROS ESPACAMENTOS
+\setlength{\droptitle}{-1.3cm}
+\setlength{\columnsep}{0.5cm}
+\setlength{\parindent}{0.5cm}
+\setlength{\parskip}{0.0cm}
+
+% LINHA HORIZONTAL
+\def\Vhrulefill{\leavevmode\leaders\hrule height 0.7ex depth \dimexpr0.5pt-0.7ex\hfill\kern0pt}
+
+% NOTAS DE RODAPE
+\thanksmarkseries{arabic}
+\setlength\thanksmarkwidth{.5em} %adicionei
+\renewcommand{\footnoterule}{
+    \kern -3pt
+    \hrule width 4.2cm height 0.5pt
+    \kern 2.6pt
+}
+\let\oldmakethanksmark\makethanksmark
+\renewcommand{\makethanksmark}{\oldmakethanksmark\small}
+\let\oldthanks\thanks
+\renewcommand{\thanks}[1]{\oldthanks{\small #1}}
+
+
+% SECOES E SUBSECOES
+\titleformat*{\section}{\fontsize{11pt}{13.2pt}\bfseries}
+\titleformat*{\subsection}{\itshape}{\fontsize{11pt}{1.2pt}}
+\titleformat*{\subsubsection}{\itshape}{\fontsize{11pt}{1.0pt}}
+
+% REFERENCIAS
+\apptocmd{\thebibliography}{\justifying}{}{} 
+
+% ----ALGUNS DESTES DADOS SERÃO ADEQUADOS PELA EDITORAÇÃO CIENTÍFICA  -----------%
+
+% INFORMACOES DO ARTIGO E DA REVISTA
+
+\newcommand{\paginainicial}{3} % página inicial
+\newcommand{\doi}{10.5433/1679-0375.2020v41n1p3} % DOI
+
+\newcommand{\volume}{41} % volume da revista
+\newcommand{\numero}{1} % numero da revista
+\newcommand{\mes}{Jan./June } % mes de publicacao da revista
+\newcommand{\ano}{2020} % ano de publicacao da revista
+
+%----------autores tem que informar os dados AQUI----------
+\newcommand{\autorcabecalho}{Author1, F.~A.; Author2, Z.~Z.; Author3, R.;  Author4, S.~W.} % nomes dos autores no cabecalho
+\newcommand{\titulocabecalho}{title in english} % titulo no cabecalho
+
+
+%-----EDITORAÇÃO CIENTÍFICA  incluirá estas informações ------
+\newcommand{\datarecebidoen}{Aug. 30, 201?} % data de recebimento do artigo em ingles
+\newcommand{\dataaceitoen}{Jan. 15, 202?} % data de aceite do artigo em ingles
+
+%---------------------------------------------------------%
+
+% PAGINA INICIAL
+\setcounter{page}{\paginainicial}
+
+% CABECALHO E RODAPE DA PRIMEIRA PAGINA
+\makepagestyle{firstpage}
+\makeoddhead{firstpage}{\fontfamily{phv}\scriptsize\selectfont ORIGINAL ARTICLE \\[-0.1cm] DOI: \doi}{}{}
+\makeoddfoot{firstpage}{}{\fontfamily{phv} \footnotesize \selectfont \hspace{1cm} \Vhrulefill \hspace{0.65cm} \thepage \\ Semina: Ciências Exatas e Tecnológicas, Londrina, v. \volume, n. \numero, p. \paginainicial-\pageref{LastPage}, \mes \ano}{}
+
+% CABECALHO E RODAPE DAS DEMAIS PAGINAS
+\makepagestyle{text}
+\makeevenhead{text}{}{\fontfamily{phv} \footnotesize \selectfont \autorcabecalho}{}
+\makeoddhead{text}{}{\fontfamily{phv} \footnotesize \selectfont \titulocabecalho}{}
+\makeevenfoot{text}{}{\fontfamily{phv} \footnotesize \selectfont \thepage \hspace{0.65cm} \Vhrulefill \hspace{1cm}~\\ Semina: Ciências Exatas e Tecnológicas, Londrina, v. \volume, n. \numero, p. \paginainicial-\pageref{LastPage}, \mes \ano}{}
+\makeoddfoot{text}{}{\fontfamily{phv} \footnotesize \selectfont \hspace{1cm} \Vhrulefill \hspace{0.65cm} \thepage \\ Semina: Ciências Exatas e Tecnológicas, Londrina, v. \volume, n. \numero, p. \paginainicial-\pageref{LastPage}, \mes \ano}{}
+
+
+%----------------------- OS AUTORES DEVEM INCLUIR AS INFORMAÇÕES ABAIXO-------------%
+
+% TITULO % Gustavo 19 maio
+\titulo{ \fontsize{16pt}{19.2pt} \selectfont
+    \textit{\textbf{Title in english}} % titulo em inglês
+}
+\tituloestrangeiro{\fontsize{16pt}{19.2pt} \selectfont
+    \textbf{Title in Portuguese}  % titulo em português
+    \vspace{0.3cm}
+}
+
+% AUTORES: Nome completo. Sobre os demais dados use abreveaturas, se necessário, para manter todas as informações/descrições,  de cada autor, em apenas uma  linha.   
+\autor{ \fontsize{13pt}{15.6pt} \selectfont
+   Author's full name\thanks{Profa. Dra., Depto. ????, Instituição, Cidade, Estado, País, E-mail: author1@gmail.com}; % primeiro autor e sua descricao
+    Author's full name\thanks{Prof. Dr., Depto. ????, Instituição, Cidade, Estado, País, E-mail: author2@gmail.com}; % segundo autor e sua descricao
+    Author's full name\thanks{Prof. Ms., Depto. ????, Instituição, Cidade, Estado, País, E-mail: author3@gmail.com}; % terceiro autor e sua descricao
+    \\ \fontsize{13pt}{15.6pt} \selectfont Author's full name\thanks{Dra., Depto. ????, Instituição, Cidade, Estado, País, E-mail: author4@gmail.com}\\
+        %\colorbox[rgb]{1,1,0}{autores enviar  informações completas - Mini currículo em português}
+   % Author 5\thanks{ Master student, Dept. Chemistry, USP, SP, Brazil; E-mail: author5@gmail.com}
+}
+
+%---------------------------------------------------------%
+
+% DATA
+\data{}
+
+\begin{document}
+
+\captionsetup{format=plain,justification=justified,singlelinecheck=false} 
+
+% DEFINICOES DO ARTIGO E PRE-TEXTUAIS
+\selectlanguage{english}
+\frenchspacing
+% \nocite{*} % comentar esta linha se houver \cite
+
+\pretextual
+\SingleSpacing
+\onecolumn
+
+% TITULO E AUTORES
+\maketitle
+\vspace{-1.2cm}
+
+% ESTILO DA PRIMEIRA PAGINA
+\thispagestyle{firstpage}
+
+%----------------------- OS AUTORES DEVEM INCLUIR AS INFORMAÇÕES ABAIXO-------------%
+% RESUMO E PALAVRAS-CHAVE EM INGLES % Gustavo 19 maio
+\begin{abstract}
+\vspace{-0.3cm}
+\hspace{-0.5cm}\rule{0.91\textwidth}{0.5pt}
+    \normalsize
+	This is the template to edit the article to be submitted to Semina: Exact and Technological Sciences. An information summary of approximately 200 words in \textbf{English} should be included here. This should be informative and not only indicate the general scope of the article but also state the main results obtained, methods used, the value of the work and the conclusions.
+Following the keywords, maximum five (5), in English separated by dot, always with the first letter in Upper case.
+	
+\vspace{0.15cm} \noindent \textbf{Keywords:} Audio amplifiers; power amplifiers; global negative feedback. 	 
+	
+\end{abstract}
+\vspace{0.3cm}
+
+% RESUMO E PALAVRAS-CHAVE EM PORTUGUES % Gustavo 19 maio
+\renewcommand{\abstractname}{Resumo}
+\begin{abstract}
+\vspace{-0.3cm}
+\hspace{-0.5cm}\rule{0.91\textwidth}{0.5pt}
+    \normalsize
+	Este é o modelo para editar o artigo a ser submetido à revista Semina: Ciências Exatas e Tecnológicas. Um resumo informativo de aproximadamente 200 palavras em português deve ser incluído aqui. Deve ser informativo e não apenas indicar o escopo geral do artigo, mas também indicar os principais resultados obtidos, métodos utilizados, valor do trabalho e conclusões. Seguindo as palavras-chave, no máximo cinco (5), em Português, separadas por pontos, sempre com a primeira letra em maiúscula
+
+\vspace{0.15cm} \noindent \textbf{Palavras-chave:} Amplificadores de áudio; amplificadores de potência; realimentação negativa global.
+     
+\end{abstract}
+\vspace{0.3cm}
+
+
+
+%---------------------------------------------------------%
+
+% DEFINICOES TEXTUAIS
+\textual
+\OnehalfSpacing
+\twocolumn
+\pagestyle{text}
+
+%----------------------- MODIFICAR -----------------------%
+
+% SECOES E SUBSECOES
+\section*{Introduction}
+
+The manuscript must be submitted only in electronic form and in the \textbf{English} language.
+The work should be done, either in LaTex (preferably) or in Microsoft Word for Windows. The formatting shown in this file should be followed.
+
+
+The Introduction section should clearly and briefly identify, with relevant references, both the nature of the problem under investigation and its background. An Introduction consisting of an extensive literature review is not acceptable.
+
+Types of Articles:
+
+\begin{enumerate}
+	     \item  original articles: maximum 10 (ten) pages; 
+		 \item  review articles: maximum 15(fifteen) pages; 
+ \end{enumerate}
+
+    
+
+       
+\section*{Second section}
+
+Experiments should be described in sufficient detail to enable other researchers to repeat them. The degree of purity of materials and their quantities should be reported. Descriptions of established procedures are unnecessary. An apparatus should be described only if it is non-standard. Commercially available instruments should be referred to by their suppliers and models. 
+Many theoretical and computational papers use a routine procedure based on a well-documented method. In such cases, it is sufficient to name the particular variant (referring to key papers in which the method has been developed), to cite the computer program used, and to indicate briefly any modifications made by the author. 
+
+
+
+
+
+\subsection*{Subsection of second section }
+Subsubsection of second section 
+
+\begin{enumerate}
+     \item 	Footnotes referring to the body of the article should be numbered immediately after the sentence to which it refers.
+     \item 	SEMINA adopts the International System of Units for physical parameters and units.
+     \item 	Graphic materials such as photographs (quality superior to 800dpi) and graphics (strictly indispensable to the clarity of the text) should appear directly and throughout the text. If the submitted illustrations have already been published, then mention the source and permission to reproduce. For the tables and any illustration (drawings, diagrams, flowcharts, photographs, charts, tables, etc.), the title should appear at the top.
+\end{enumerate}
+
+The tables should be accompanied by a header that allows a clear understanding of the meaning of the collected data.
+Indicate the source below the table or figure. Use smaller font. When it comes to self-illustration, indicate: Source: the author himself (The author).
+      The equations are listed sequentially in the text, with right-hand numbering, for example,
+
+\begin{equation}
+\label{eq1}
+\rho_i=\frac{\sum^{k}_{j=1} d_{i,j}}{(k^2-1)}.
+\end{equation}
+
+In equation \ref{eq1}, .....
+
+
+
+
+      The equations are listed sequentially in the text, with right-hand numbering, for example,
+%
+
+
+\section*{Tables and Figures }
+
+Indicate the source below the table or figure. Use smaller font. When it comes to self-illustration, indicate: Source: the author himself (The author).
+
+
+\begin{table}[!htpp]
+	\vspace{0.3cm}
+    %\centering
+  \caption{ caption }
+	\vspace{-0.6cm}
+	\label{tab01}
+	\renewcommand{\arraystretch}{1.2}
+	\begin{center}
+\begin{tabular}{ccc}
+\hline
+\textbf{name } &	\textbf{name  }	& \textbf{name }\\
+\hline		
+A	&23	&- \\
+B	&200	&50\\
+C	&200	&20\\
+D	&400	&10\\
+E	&400	&5\\
+\hline
+\end{tabular}
+\end{center}
+\small\textbf{Source:} The authors.
+\end{table}
+
+
+\begin{table*}[!htpp]
+	\vspace{0.3cm}
+    %\centering
+  \caption{ Table in a single column }
+	\vspace{-0.6cm}
+	\label{tab02} % Gustavo 19 maio
+	\renewcommand{\arraystretch}{1.2}
+	\begin{center}
+\begin{tabular}{ccc}
+\hline
+\textbf{name } &	\textbf{name  }	& \textbf{name }\\
+\hline		
+A	&23	&- \\
+B	&200	&50\\
+C	&200	&20\\
+D	&400	&10\\
+E	&400	&5\\
+\hline
+\end{tabular}
+\end{center}
+\small\textbf{Source:} The authors.
+\end{table*}
+
+
+%
+\begin{verbatim}
+\begin{figure}[h!]
+    \beguin{center}
+    \caption{Caption }
+    \includegraphics[scale=1]{Figura1.png}
+    \label{fig:fig1}
+    \end{center}
+    \end{center}
+     \small\textbf{Source:}  The authors.
+\end{figure}
+\end{verbatim}
+
+Figure in a single column.
+\begin{verbatim}
+\begin{figure*}[h!]
+    \beguin{center}
+    \caption{Caption }
+    \includegraphics[scale=1]{Figura1.png}
+    \label{fig:fig2}
+    \end{center}
+    \end{center}
+     \small\textbf{Source:}  The authors.
+\end{figure*}
+\end{verbatim}
+
+More
+\begin{enumerate}
+\item The quantities, units and symbols must obey with the national standards ABNT.
+\item	The publication of the works depends on the opinion of the Scientific Advisory Board "Ad hoc". 
+\item	The issues and problems not foreseen in these standards will be decided by the Editorial Committee of the area.
+\item	In the text, the biographical references must be written according to the Brazilian Association of Technical Standards (ABNT) NBR 6023/2000 and should be listed in alphabetical order at the end of the article. The accuracy and adequacy of the references are the responsibility of the author. Some examples of bibliographic citations:
+\item	In Howell \textit{et al.} (2016), .......\cite{HOWELL}  and ......\cite{Lions} ..... present  ....
+\end{enumerate}
+%---------------------------------------------------------%
+
+% DEFINICOES POS-TEXTUAIS
+\postextual
+\pagestyle{text}
+
+%----------------------- MODIFICAR -----------------------%
+
+
+% AGRADECIMENTOS
+\section*{Acknowledgments}
+ The authors wish to thank the Laboratory of Microscopy and Microanalysis (LMEM) and Laboratory of Spectroscopy (ESPEC) of State University of Londrina, CAPES-DS and CNPq (N$^{\circ}$ 479768/2012-9) - Brazil, for financial support.
+
+%\section*{Appendices}
+
+%Appendices can be used in the case of extensive listings, statistics and other support elements. 
+ 
+
+%\newpage
+ 
+% REFERENCIAS
+\section*{References}
+\vspace{-1.5cm}
+\renewcommand{\bibname}{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\providecommand{\abntreprintinfo}[1]{%
+ \citeonline{#1}}
+\setlength{\labelsep}{0pt}
+\begin{thebibliography}{}
+\providecommand{\abntrefinfo}[3]{}
+\providecommand{\abntbstabout}[1]{}
+\abntbstabout{v-1.9.6 }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Bibliographical citations should follow the system of alphabetical order (NBR 10520 of ABNT). 
+
+
+
+\bibitem{Lions}
+\abntrefinfo{Lions}{LIONS \textit{et al}.}{1972}
+{LIONS, J.L.,  MAGENES, E.,
+Non-Homogeneous Boundary Value Problems and Applications I-II,
+Springer-Verlag, New York, 1972.}
+
+
+\bibitem{HOWELL}
+\abntrefinfo{HOWELL}{HOWELL \textit{et al}.}{2016}
+{HOWELL, J. R.; MENGUC, M. P.; SIEGEL, R.  Thermal Radiation Heat Transfer. \textit{CRC Press}, New York, 2016.}
+
+ \end{thebibliography}{}  
+
+
+
+
+%---------------------------------------------------------%
+
+% DATAS DE RECEBIMENTO E DE ACEITE DO ARTIGO
+\newpage % descomentar esta linha se as datas estiverem na primeira coluna
+\vspace*{\fill}
+
+\begin{flushright}
+    \SingleSpacing
+    \textit{Received:  \datarecebidoen} \\
+    \textit{Accepted:  \dataaceitoen} \\
+\end{flushright}
+
+
+% %PAGINA EM BRANCO
+%\clearpage % descomentar esta linha se a ultima pagina for impar
+%\renewcommand{\headrulewidth}{-0.5pt}
+%\vspace*{\fill} % descomentar esta linha se a ultima pagina for impar
+% %PAGINA EM BRANCO
+%\makepagestyle{text}
+%\makeevenhead{text}{}{}{}
+%\makeoddhead{text}{}{}{}
+%\makeevenfoot{text}{}{}{}
+%\makeoddfoot{text}{}{}{}
+
+\end{document}
