@@ -13,6 +13,13 @@ div[class^="figure"] {
     text-align: center;
 }
 
+
+
+hr {
+    border-style: solid;
+    border-color: #c4c4c4 !important;
+}
+
 strong {
     text-align: justify;
     font-weight: 500;
@@ -23,7 +30,11 @@ h1 {
     font-weight: 400;
 }
 
-h2, h3, h4, h5, h6 {
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-weight: 400;
 }
 
@@ -33,10 +44,16 @@ figure {
 
 table {
     margin: 0 auto;
+    border-collapse: collapse;
 }
 
 th {
     font-weight: 500;
+    border: 1px solid black;
+}
+
+td {
+    border: 1px solid black;
 }
 
 img {
@@ -94,7 +111,8 @@ a {
         margin: 0 auto;
     }
 
-    td, th {
+    td,
+    th {
         width: 25%;
         padding: 10px;
         text-align: center;
