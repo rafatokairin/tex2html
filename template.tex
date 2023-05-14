@@ -32,9 +32,7 @@
 \usepackage{lastpage}
 \usepackage{multirow}
 
-
 %\addbibresource
-
 %\usepackage[alf]{abntex2cite}
 %\usepackage{amsmath}
 \usepackage{wrapfig}
@@ -85,7 +83,6 @@
 \let\oldthanks\thanks
 \renewcommand{\thanks}[1]{\oldthanks{\small #1}}
 
-
 % SECOES E SUBSECOES
 \titleformat*{\section}{\fontsize{11pt}{13.2pt}\bfseries}
 \titleformat*{\subsection}{\itshape}{\fontsize{11pt}{1.2pt}}
@@ -100,7 +97,6 @@
 
 \newcommand{\paginainicial}{3} % página inicial
 \newcommand{\doi}{10.5433/1679-0375.2020v41n1p3} % DOI
-
 \newcommand{\volume}{41} % volume da revista
 \newcommand{\numero}{1} % numero da revista
 \newcommand{\mes}{Jan./June } % mes de publicacao da revista
@@ -109,7 +105,6 @@
 %----------autores tem que informar os dados AQUI----------
 \newcommand{\autorcabecalho}{Author1, F.~A.; Author2, Z.~Z.; Author3, R.;  Author4, S.~W.} % nomes dos autores no cabecalho
 \newcommand{\titulocabecalho}{title in english} % titulo no cabecalho
-
 
 %-----EDITORAÇÃO CIENTÍFICA  incluirá estas informações ------
 \newcommand{\datarecebidoen}{Aug. 30, 201?} % data de recebimento do artigo em ingles
@@ -131,7 +126,6 @@
 \makeoddhead{text}{}{\fontfamily{phv} \footnotesize \selectfont \titulocabecalho}{}
 \makeevenfoot{text}{}{\fontfamily{phv} \footnotesize \selectfont \thepage \hspace{0.65cm} \Vhrulefill \hspace{1cm}~\\ Semina: Ciências Exatas e Tecnológicas, Londrina, v. \volume, n. \numero, p. \paginainicial-\pageref{LastPage}, \mes \ano}{}
 \makeoddfoot{text}{}{\fontfamily{phv} \footnotesize \selectfont \hspace{1cm} \Vhrulefill \hspace{0.65cm} \thepage \\ Semina: Ciências Exatas e Tecnológicas, Londrina, v. \volume, n. \numero, p. \paginainicial-\pageref{LastPage}, \mes \ano}{}
-
 
 %----------------------- OS AUTORES DEVEM INCLUIR AS INFORMAÇÕES ABAIXO-------------%
 
@@ -184,7 +178,7 @@
 \begin{abstract}
 \vspace{-0.3cm}
 \hspace{-0.5cm}\rule{0.91\textwidth}{0.5pt}
-    \normalsize
+\normalsize
 	This is the template to edit the article to be submitted to Semina: Exact and Technological Sciences. An information summary of approximately 200 words in \textbf{English} should be included here. This should be informative and not only indicate the general scope of the article but also state the main results obtained, methods used, the value of the work and the conclusions.
 Following the keywords, maximum five (5), in English separated by dot, always with the first letter in Upper case.
 	
@@ -232,7 +226,7 @@ Types of Articles:
 \begin{enumerate}
 	     \item  original articles: maximum 10 (ten) pages; 
 		 \item  review articles: maximum 15(fifteen) pages; 
- \end{enumerate}
+\end{enumerate}
 
     
 
@@ -241,10 +235,6 @@ Types of Articles:
 
 Experiments should be described in sufficient detail to enable other researchers to repeat them. The degree of purity of materials and their quantities should be reported. Descriptions of established procedures are unnecessary. An apparatus should be described only if it is non-standard. Commercially available instruments should be referred to by their suppliers and models. 
 Many theoretical and computational papers use a routine procedure based on a well-documented method. In such cases, it is sufficient to name the particular variant (referring to key papers in which the method has been developed), to cite the computer program used, and to indicate briefly any modifications made by the author. 
-
-
-
-
 
 \subsection*{Subsection of second section }
 Subsubsection of second section 
@@ -265,10 +255,6 @@ Indicate the source below the table or figure. Use smaller font. When it comes t
 \end{equation}
 
 In equation \ref{eq1}, .....
-
-
-
-
       The equations are listed sequentially in the text, with right-hand numbering, for example,
 %
 
@@ -276,7 +262,6 @@ In equation \ref{eq1}, .....
 \section*{Tables and Figures }
 
 Indicate the source below the table or figure. Use smaller font. When it comes to self-illustration, indicate: Source: the author himself (The author).
-
 
 \begin{table}[!htpp]
 	\vspace{0.3cm}
@@ -301,7 +286,6 @@ E	&400	&5\\
 \small\textbf{Source:} The authors.
 \end{table}
 
-
 \begin{table*}[!htpp]
 	\vspace{0.3cm}
     %\centering
@@ -324,7 +308,6 @@ E	&400	&5\\
 \end{center}
 \small\textbf{Source:} The authors.
 \end{table*}
-
 
 %
 \begin{verbatim}
@@ -368,7 +351,6 @@ More
 
 %----------------------- MODIFICAR -----------------------%
 
-
 % AGRADECIMENTOS
 \section*{Acknowledgments}
  The authors wish to thank the Laboratory of Microscopy and Microanalysis (LMEM) and Laboratory of Spectroscopy (ESPEC) of State University of Londrina, CAPES-DS and CNPq (N$^{\circ}$ 479768/2012-9) - Brazil, for financial support.
@@ -377,7 +359,6 @@ More
 
 %Appendices can be used in the case of extensive listings, statistics and other support elements. 
  
-
 %\newpage
  
 % REFERENCIAS
@@ -397,8 +378,6 @@ More
 
 %Bibliographical citations should follow the system of alphabetical order (NBR 10520 of ABNT). 
 
-
-
 \bibitem{Lions}
 \abntrefinfo{Lions}{LIONS \textit{et al}.}{1972}
 {LIONS, J.L.,  MAGENES, E.,
@@ -412,9 +391,6 @@ Springer-Verlag, New York, 1972.}
 
  \end{thebibliography}{}  
 
-
-
-
 %---------------------------------------------------------%
 
 % DATAS DE RECEBIMENTO E DE ACEITE DO ARTIGO
@@ -427,7 +403,6 @@ Springer-Verlag, New York, 1972.}
     \textit{Accepted:  \dataaceitoen} \\
 \end{flushright}
 
-
 % %PAGINA EM BRANCO
 %\clearpage % descomentar esta linha se a ultima pagina for impar
 %\renewcommand{\headrulewidth}{-0.5pt}
@@ -438,5 +413,4 @@ Springer-Verlag, New York, 1972.}
 %\makeoddhead{text}{}{}{}
 %\makeevenfoot{text}{}{}{}
 %\makeoddfoot{text}{}{}{}
-
 \end{document}
