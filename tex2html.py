@@ -3,6 +3,42 @@ import pypandoc
 from bs4 import BeautifulSoup
 import re
 
+def buscar_termos_arquivo_tex(filename):
+    with open(filename, "r", encoding="utf-8") as f:
+        conteudo = f.read()
+    # Define uma lista com os termos que queremos buscar
+    termos = [
+        r"\\newcommand{\\titulocabecalho}{(.+?)}",
+        r"\\newcommand{\\autorcabecalho}{(.+?)}",
+        r"\\newcommand{\\doi}{(.+?)[\\\\}]",
+        r"\\newcommand{\\volume}{(.+?)}",
+        r"\\newcommand{\\numero}{(.+?)}",
+        r"\\newcommand{\\paginainicial}{(.+?)}",
+        r"\\newcommand{\\mes}{(.+?)}",
+        r"\\newcommand{\\ano}{(.+?)}",
+    ]
+
+    # Cria um dicionário para armazenar os valores encontrados
+    resultados = {}
+
+    # Busca pelos termos no arquivo
+    for termo in termos:
+        match = re.search(termo, conteudo)
+        if match:
+            if termo == r"\\newcommand{\\paginainicial}{(.+?)}":
+                resultados[termo] = ", p. " + match.group(1)
+            elif termo == r"\\newcommand{\\volume}{(.+?)}":
+                resultados[termo] = ", v. " + match.group(1)
+            elif termo == r"\\newcommand{\\numero}{(.+?)}":
+                resultados[termo] = ", n. " + match.group(1)
+            elif termo == r"\\newcommand{\\mes}{(.+?)}":
+                resultados[termo] = ", " + match.group(1)
+            elif termo == r"\\newcommand{\\autorcabecalho}{(.+?)}":
+                resultados[termo] = re.sub(r'~', ' ', match.group(1))
+            else:
+                resultados[termo] = match.group(1)
+    return resultados
+
 # Nome do arquivo .tex de entrada (assumindo que esteja na mesma pasta do arquivo Python)
 tex_file_name = 'main.tex'
 
@@ -26,6 +62,7 @@ def convert_tex_to_html(tex_content):
 
 # Chame a função para realizar a conversão
 html_content, h1_list = convert_tex_to_html(conteudo_sem_asteriscos)
+resultados = buscar_termos_arquivo_tex(tex_file_name)
 
 if html_content is not None:
     with open(f"{os.path.splitext(tex_file_name)[0]}.html", 'w', encoding='utf-8') as f:
@@ -39,6 +76,23 @@ if html_content is not None:
         f.write('<meta charset="utf-8">\n')
         f.write('</head>\n')
         f.write('<body>\n')
+        # Titulo
+        f.write('<h1>')
+        f.write(list(resultados.values())[0])
+        f.write('</h1>\n')
+        # Autor
+        f.write('<p>')
+        f.write(list(resultados.values())[1])
+        f.write('</p>\n')
+        # Doi
+        f.write('<p>DOI ')
+        f.write(list(resultados.values())[2])
+        f.write('</p>\n')
+        # Infos
+        f.write('<p>Semina: Ciências Exatas e Tecnológicas, Londrina')
+        for i in range(3, len(resultados)):
+            f.write(list(resultados.values())[i])
+        f.write('</p>\n')
         # Adiciona o índice
         f.write('<div id="index">\n')
         f.write('<h2>Outline:</h2>\n')
