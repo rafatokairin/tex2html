@@ -42,10 +42,11 @@ def buscar_termos_arquivo_tex(filename):
 # Nome do arquivo .tex de entrada (assumindo que esteja na mesma pasta do arquivo Python)
 tex_file_name = 'main.tex'
 
-# Lê o arquivo de entrada e remove os asteriscos
+# Lê o arquivo de entrada, remove os asteriscos e adiciona \[
 with open(tex_file_name, "r", encoding="utf-8") as f:
     conteudo = f.read()
     conteudo_sem_asteriscos = re.sub(r"\\(begin|end){([^}\s]+)\*}", r"\\\1{\2}", conteudo)
+    conteudo_atualizado = re.sub(r"\\begin{equation}(\s*\\label{[^}]+})?", r"\\begin{equation}\g<1>\[", conteudo_sem_asteriscos)
 
 def convert_tex_to_html(tex_content):
     try:
@@ -60,11 +61,18 @@ def convert_tex_to_html(tex_content):
         print(f'Ocorreu um erro durante a conversão: {e}')
         return None, None
 
+# Define a função para substituir o conteúdo necessário
+def substituir_conteudo(html_content):
+    padrao = r'<span class="math display">\\\[\\label{([^}]+)}'
+    conteudo_com_id = re.sub(padrao, r'<span class="math display" id="\1">', html_content)
+    return conteudo_com_id
+
 # Chame a função para realizar a conversão
-html_content, h1_list = convert_tex_to_html(conteudo_sem_asteriscos)
+html_content, h1_list = convert_tex_to_html(conteudo_atualizado)
 resultados = buscar_termos_arquivo_tex(tex_file_name)
 
 if html_content is not None:
+    conteudo_com_id = substituir_conteudo(html_content)
     with open(f"{os.path.splitext(tex_file_name)[0]}.html", 'w', encoding='utf-8') as f:
         f.write('<!DOCTYPE html>\n')
         f.write('<html lang="en-US">\n')
@@ -101,6 +109,6 @@ if html_content is not None:
             f.write(f'<li><a href="#{h1.lower()}">{h1.replace("-", " ")}</a></li>\n')
         f.write('</ol>\n')
         f.write('</div>\n')
-        f.write(html_content)
+        f.write(conteudo_com_id)  # Utiliza o conteúdo com as substituições
         f.write('</body>\n')
         f.write('</html>')
