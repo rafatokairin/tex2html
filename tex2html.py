@@ -46,7 +46,7 @@ tex_file_name = 'main.tex'
 with open(tex_file_name, "r", encoding="utf-8") as f:
     conteudo = f.read()
     conteudo_sem_asteriscos = re.sub(r"\\(begin|end){([^}\s]+)\*}", r"\\\1{\2}", conteudo)
-    conteudo_atualizado = re.sub(r"\\begin{equation}(\s*\\label{[^}]+})?", r"\\begin{equation}\g<1>\[", conteudo_sem_asteriscos)
+    conteudo_atualizado = re.sub(r"\\begin{equation}(\s*\\label{[^}]+})", r"\\begin{equation}\g<1>\[", conteudo_sem_asteriscos)
 
 def convert_tex_to_html(tex_content):
     try:
