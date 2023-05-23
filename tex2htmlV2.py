@@ -30,7 +30,6 @@ def generate_html_with_mathjax(html_file):
 </head>
 <body>
 '''
-
     # Lendo o conteúdo do arquivo HTML gerado pela conversão
     with open(html_file, 'rb') as f:
         tex_content = f.read().decode('utf-8')
@@ -50,7 +49,6 @@ def generate_html_with_mathjax(html_file):
 </body>
 </html>
 '''
-
     # Escrevendo o conteúdo HTML completo no arquivo final
     with open(html_file, 'w', encoding='utf-8') as f:
         f.write(html_content)
