@@ -46,7 +46,15 @@ tex_file_name = 'main.tex'
 with open(tex_file_name, "r", encoding="utf-8") as f:
     conteudo = f.read()
     conteudo_sem_asteriscos = re.sub(r"\\(begin|end){([^}\s]+)\*}", r"\\\1{\2}", conteudo)
+    # Substituições no conteúdo atualizado do arquivo tex
     conteudo_atualizado = re.sub(r"\\begin{equation}(\s*\\label{[^}]+})", r"\\begin{equation}\g<1>\[", conteudo_sem_asteriscos)
+    conteudo_atualizado = conteudo_atualizado.replace('\\bm{', '\\mathbf{')
+    conteudo_atualizado = conteudo_atualizado.replace('\\textsuperscript{\\textregistered}', '&reg;')
+    conteudo_atualizado = conteudo_atualizado.replace('\\textregistered', '&reg;')
+    conteudo_atualizado = conteudo_atualizado.replace('\\copyright', '&copy;')
+    conteudo_atualizado = conteudo_atualizado.replace('\\hdots', '\\dots')
+    conteudo_atualizado = re.sub(r'\\parbox\{.*?\}', '', conteudo_atualizado)
+    conteudo_atualizado = conteudo_atualizado.replace('\\centering', '')
 
 def convert_tex_to_html(tex_content):
     try:
@@ -73,42 +81,30 @@ resultados = buscar_termos_arquivo_tex(tex_file_name)
 
 if html_content is not None:
     conteudo_com_id = substituir_conteudo(html_content)
-    with open(f"{os.path.splitext(tex_file_name)[0]}.html", 'w', encoding='utf-8') as f:
-        f.write('<!DOCTYPE html>\n')
-        f.write('<html lang="en-US">\n')
-        f.write('<head>\n')
-        # Biblioteca MathJax
-        f.write('<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>\n')
-        # CSS
-        f.write('<link rel="stylesheet" type="text/css" href="style.css">\n')
-        f.write('<meta charset="utf-8">\n')
-        f.write('</head>\n')
-        f.write('<body>\n')
-        # Titulo
-        f.write('<h1>')
-        f.write(list(resultados.values())[0])
-        f.write('</h1>\n')
-        # Autor
-        f.write('<p>')
-        f.write(list(resultados.values())[1])
-        f.write('</p>\n')
-        # Doi
-        f.write('<p>DOI ')
-        f.write(list(resultados.values())[2])
-        f.write('</p>\n')
-        # Infos
-        f.write('<p>Semina: Ciências Exatas e Tecnológicas, Londrina')
-        for i in range(3, len(resultados)):
-            f.write(list(resultados.values())[i])
-        f.write('</p>\n')
-        # Adiciona o índice
-        f.write('<div id="index">\n')
-        f.write('<h2>Outline:</h2>\n')
-        f.write('<ol>\n')
+    new_html_file = f"{os.path.splitext(tex_file_name)[0]}.html"
+    with open(new_html_file, 'w', encoding='utf-8') as f:
+        html_content = f'''<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>{list(resultados.values())[0]}</h1>
+    <p>{list(resultados.values())[1]}</p>
+    <p>DOI {list(resultados.values())[2]}</p>
+    <p>Semina: Ciências Exatas e Tecnológicas, Londrina{''.join(list(resultados.values())[3:])}</p>
+    <div id="index">
+        <h2>Outline:</h2>
+        <ol>
+'''
         for h1 in h1_list:
-            f.write(f'<li><a href="#{h1.lower()}">{h1.replace("-", " ")}</a></li>\n')
-        f.write('</ol>\n')
-        f.write('</div>\n')
-        f.write(conteudo_com_id)  # Utiliza o conteúdo com as substituições
-        f.write('</body>\n')
-        f.write('</html>')
+            html_content += f'<li><a href="#{h1.lower()}">{h1.replace("-", " ")}</a></li>\n'
+        html_content += '''
+        </ol>
+    </div>
+    ''' + conteudo_com_id + '''
+</body>
+</html>'''
+        f.write(html_content)
