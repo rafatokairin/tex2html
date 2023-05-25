@@ -9,7 +9,7 @@ def buscar_termos_arquivo_tex(filename):
     # Define uma lista com os termos que queremos buscar
     termos = [
         r"\\newcommand{\\titulocabecalho}{(.+?)}",
-        r"\\newcommand{\\autorcabecalho}{(.+?)}",
+        r"\\newcommand{\\autorcabecalho}{(.+?)[\\\\}]",
         r"\\newcommand{\\doi}{(.+?)[\\\\}]",
         r"\\newcommand{\\volume}{(.+?)}",
         r"\\newcommand{\\numero}{(.+?)}",
