@@ -101,7 +101,75 @@ if html_content is not None:
 <html lang="en-US">
 <head>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans, Ubuntu, Droid Sans, Helvetica Neue, sans-serif;
+            word-break: normal;
+            line-height: 2;
+            text-align: justify;
+            font-size: 15px;
+            font-weight: 400;
+            margin-right: 330px;
+            margin-left: 330px;
+            display: block;
+            justify-content: center;
+            align-items: center;
+        }}
+
+        h1, h2, h3 {{
+            font-weight: 400;
+        }}
+
+        img {{
+            max-height: 700px !important;
+            max-width: 700px !important;
+            display: block;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }}
+
+        table {{
+            border-collapse: collapse;
+            margin-top: 20px;
+            text-align: center !important;
+        }}
+
+        thead th {{
+            background-color: #f2f2f2;
+            font-weight: bold;
+            padding: 10px;
+            text-align: center;
+        }}
+
+        tbody td {{
+            padding: 10px;
+            text-align: center;
+        }}
+
+        tbody tr.odd {{
+            background-color: #f9f9f9;
+        }}
+
+        tbody tr:hover {{
+            background-color: #e6e6e6;
+        }}
+
+        table tbody tr:last-child td {{
+            border-bottom: 1px solid black;
+        }}
+
+        thead:before,
+        thead:after {{
+            content: "";
+            display: table-row;
+            border-bottom: 1px solid black;
+        }}
+
+        table {{
+            margin: 0 auto;
+            border-collapse: collapse;
+        }} 
+    </style>
     <meta charset="utf-8">
 </head>
 <body>
