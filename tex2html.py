@@ -102,6 +102,10 @@ if html_content is not None:
 <head>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <style>
+        html {{
+            scroll-behavior: smooth;
+        }}
+        
         body {{
             font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans, Ubuntu, Droid Sans, Helvetica Neue, sans-serif;
             word-break: normal;
