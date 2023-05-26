@@ -52,6 +52,7 @@ with open(tex_file_name, "r", encoding="utf-8") as f:
     conteudo_atualizado = re.sub(r'\\parbox\{.*?\}', '', conteudo_atualizado)
     conteudo_atualizado = conteudo_atualizado.replace('\\centering', '')
     conteudo_atualizado = conteudo_atualizado.replace(r'\begin{otherlanguage}{brazil}', '')
+    conteudo_atualizado = re.sub(r'\\includegraphics(\[.*?\])?\{(.*?)(\.(?!jpeg$)\w+)?\}', lambda match: f'\\includegraphics{match.group(1)}{{{match.group(2)}{".png" if match.group(3) != ".jpeg" else match.group(3)}}}', conteudo_atualizado)
 
 def convert_tex_to_html(tex_content):
     try:
