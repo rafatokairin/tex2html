@@ -182,7 +182,7 @@ if html_content is not None:
     <h3>{list(resultados.values())[1]}</h3>
     <p><strong>DOI</strong> {list(resultados.values())[2]}</p>
     <p><strong>Citation</strong> Semina: Ciências Exatas e Tecnológicas, Londrina{''.join(list(resultados.values())[3:])}</p>
-    <h3><strong>Abstract:</strong></h3>
+    <h3>Abstract:</h3>
     ''' + conteudo_com_id + '''
 </body>
 </html>'''
