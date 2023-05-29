@@ -126,8 +126,8 @@ if html_content is not None:
         }}
 
         img {{
-            max-height: 700px !important;
-            max-width: 700px !important;
+            max-height: 350px !important;
+            max-width: 350px !important;
             display: block;
             margin-left: auto !important;
             margin-right: auto !important;
