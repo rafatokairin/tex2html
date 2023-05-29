@@ -114,8 +114,8 @@ if html_content is not None:
             text-align: justify;
             font-size: 15px;
             font-weight: 400;
-            margin-right: 330px;
-            margin-left: 330px;
+            margin-right: 400px;
+            margin-left: 400px;
             display: block;
             justify-content: center;
             align-items: center;
