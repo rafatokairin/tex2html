@@ -129,6 +129,8 @@ def substituir_conteudo(conteudo_com_id):
     conteudo_com_id = conteudo_com_id.replace('\\textsuperscript{\\textregistered}', '&reg;')
     conteudo_com_id = conteudo_com_id.replace('\\textregistered', '&reg;')
     conteudo_com_id = conteudo_com_id.replace('\\copyright', '&copy;')
+    conteudo_com_id = re.sub(r'class="math display">\\\[\\label{(\w+)}', r'class="math display" id="\1">\\[', conteudo_com_id)
+    conteudo_com_id = re.sub(r'class="math display">\\\[\\label\{([^}]*)\}', r'class="math display" id="\1">\\[', conteudo_com_id)
     # Extrair o valor numérico do estilo (95.0)
     regex = r'style="width:(\d+\.\d+)%"'
     matches = re.findall(regex, conteudo_com_id)
@@ -140,24 +142,6 @@ def substituir_conteudo(conteudo_com_id):
         # Substituir o valor original pelo novo valor no conteúdo
         conteudo_com_id = conteudo_com_id.replace(f'style="width:{match}%"', f'style="width:{novo_valor}"')
     return conteudo_com_id
-
-def substituir_span(html):
-    pattern = r'\\label\{([\w:]+)\}'
-    matches = re.findall(pattern, html)
-    ids = []
-
-    for label in matches:
-        ids.append(label)
-        html = html.replace(f'\\label{{{label}}}', '')
-    span_pattern = r'<span class="math display">'
-    spans = re.split(span_pattern, html)
-
-    for i, span in enumerate(spans[1:]):
-        if i < len(ids):
-            span_id = f'id="{ids[i]}"'
-            spans[i + 1] = f'<span {span_id} class="math display">{span.strip()}</span>'
-    html = ''.join(spans)
-    return html
 
 # Chame a função para realizar a conversão
 html_content = convert_tex_to_html(conteudo_atualizado)
@@ -228,8 +212,7 @@ file_path_bib = 'Article1.bib'
 bib_output = extract_info(file_path_bib)
 
 if html_content is not None:
-    substuido = substituir_conteudo(html_content)
-    conteudo_com_id = substituir_span(substuido)
+    conteudo_com_id = substituir_conteudo(html_content)
     new_html_file = f"{os.path.splitext(tex_file_name)[0]}.html"
     with open(new_html_file, 'w', encoding='utf-8') as f:
         html_content = f'''<!DOCTYPE html>
