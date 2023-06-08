@@ -129,7 +129,6 @@ def substituir_conteudo(conteudo_com_id):
     conteudo_com_id = conteudo_com_id.replace('\\textsuperscript{\\textregistered}', '&reg;')
     conteudo_com_id = conteudo_com_id.replace('\\textregistered', '&reg;')
     conteudo_com_id = conteudo_com_id.replace('\\copyright', '&copy;')
-    conteudo_com_id = re.sub(r'class="math display">\\\[\\label{(\w+)}', r'class="math display" id="\1">\\[', conteudo_com_id)
     conteudo_com_id = re.sub(r'class="math display">\\\[\\label\{([^}]*)\}', r'class="math display" id="\1">\\[', conteudo_com_id)
     # Extrair o valor numérico do estilo (95.0)
     regex = r'style="width:(\d+\.\d+)%"'
