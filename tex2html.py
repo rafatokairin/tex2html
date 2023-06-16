@@ -3,6 +3,100 @@ import pypandoc
 from bs4 import BeautifulSoup
 import re
 
+file_path_bib = 'Article1.bib'
+tex_file_name = 'Article1.tex'
+
+def replace_cite(text, bib_file):
+    # Lê o arquivo .bib e armazena as informações em um dicionário
+    bib_entries = {}
+    with open(bib_file, 'r', encoding='utf-8') as file:
+        entry = ''
+        key = ''
+        for line in file:
+            if line.startswith('@'):
+                entry = line.strip().split('{')[1][:-1]
+                key = entry.split(',')[0]
+            elif line.strip() == '}':
+                bib_entries[key] = entry
+            else:
+                entry += line
+    # Encontra as citações no texto usando expressões regulares
+    pattern = r'\\cite\{([^}]+)\}'
+    matches = re.findall(pattern, text)
+    # Substitui as citações pelos formatos desejados
+    for match in matches:
+        citation = match.split(',')
+        replacements = []
+        for key in citation:
+            key = key.strip()
+            if key in bib_entries:
+                entry = bib_entries[key]
+                author = re.search(r'author\s*=\s*\{([^}]+)\}', entry).group(1)
+                year = re.search(r'year\s*=\s*\{([^}]+)\}', entry).group(1)
+
+                authors = author.split(' and ')
+                if len(authors) > 1:
+                    if len(authors) > 2:
+                        first_author = authors[0].split(',')[0]
+                        replacements.append(f'{first_author} et al., {year}')
+                    else:
+                        author_names = [name.split(',')[0] for name in authors]
+                        replacements.append(f'{author_names[0]} & {author_names[1]}, {year}')
+                else:
+                    replacements.append(f'{authors[0].split(",")[0].split()[0]}, {year}')
+            else:
+                replacements.append(f'[{key} - not found]')
+        # Realiza a substituição no texto original
+        replacements_text = '; '.join(replacements)
+        text = text.replace(f'\\cite{{{match}}}', f'({replacements_text})')
+    return text
+
+def replace_citeauthor(text, bib_file):
+    # Lê o arquivo .bib e armazena as informações em um dicionário
+    bib_entries = {}
+    with open(bib_file, 'r', encoding='utf-8') as file:
+        entry = ''
+        key = ''
+        for line in file:
+            if line.startswith('@'):
+                entry = line.strip().split('{')[1][:-1]
+                key = entry.split(',')[0]
+            elif line.strip() == '}':
+                bib_entries[key] = entry
+            else:
+                entry += line
+    # Encontra as citações no texto usando expressões regulares
+    pattern = r'\\citeauthor\{([^}]+)\}'
+    matches = re.findall(pattern, text)
+    # Substitui as citações pelos formatos desejados
+    for match in matches:
+        citation = match.split(',')
+        replacements = []
+        for key in citation:
+            key = key.strip()
+            if key in bib_entries:
+                entry = bib_entries[key]
+                author = re.search(r'author\s*=\s*\{([^}]+)\}', entry).group(1)
+                year = re.search(r'year\s*=\s*\{([^}]+)\}', entry).group(1)
+
+                authors = author.split(' and ')
+                if len(authors) > 1:
+                    if len(authors) > 2:
+                        first_author = authors[0].split(',')[0]
+                        replacements.append(f'{first_author} et al. ({year})')
+                    else:
+                        author_names = [name.split(',')[0] for name in authors]
+                        replacements.append(f'{author_names[0]} & {author_names[1]} ({year})')
+                else:
+                    replacements.append(f'{authors[0].split(",")[0].split()[0]} ({year})')
+            else:
+                replacements.append(f'[{key} - not found]')
+        # Realiza a substituição no texto original
+        replacements_text = '; '.join(replacements)
+        text = text.replace(
+            f'\\citeauthor{{{match}}}', f'{replacements_text}')
+    return text
+
 def copy_abstract_eng(tex_file_name):
     with open(tex_file_name, "r", encoding="utf-8") as f:
         conteudo = f.read()
@@ -31,6 +125,7 @@ def copy_abstract_eng(tex_file_name):
             elif conteudo[end] == '}':
                 count -= 1
             end += 1
+
         if start >= 0 and end >= 0:
             keywords = conteudo[start:end-1].strip()
         else:
@@ -49,10 +144,9 @@ def buscar_termos_arquivo_tex(filename):
         r"\\ArticleTitleENG{(.+?)}",
         r"\\AuthorHeader{(.+?)[\\\\}]",
         r"\\DOI{(.+?)[\\\\}]",
-        r"\\Volume{(.+?)}",
-        r"\\InitialPage{(.+?)}",
-        r"\\Month{(.+?)}",
         r"\\Year{(.+?)}",
+        r"\\Volume{(.+?)}",
+        r"\\ArticleID{(.+?)}",
     ]
     # Cria um dicionário para armazenar os valores encontrados
     resultados = {}
@@ -60,12 +154,10 @@ def buscar_termos_arquivo_tex(filename):
     for termo in termos:
         match = re.search(termo, conteudo)
         if match:
-            if termo == r"\\InitialPage{(.+?)}":
-                resultados[termo] = ", p. " + match.group(1)
-            elif termo == r"\\Volume{(.+?)}":
+            if termo == r"\\Volume{(.+?)}":
                 resultados[termo] = ", v. " + match.group(1)
-            elif termo == r"\\Month{(.+?)}":
-                resultados[termo] = ", " + match.group(1)
+            elif termo == r"\\ArticleID{(.+?)}":
+                resultados[termo] = ": " + match.group(1)
             elif termo == r"\\AuthorHeader{(.+?)}":
                 resultados[termo] = re.sub(r'~', ' ', match.group(1))
             elif termo == r"\\Year{(.+?)}":
@@ -84,6 +176,7 @@ def replace_insert_figure(match):
     if scale_match:
         scale = scale_match.group(1)
         options = options.replace(f'scale={scale}', f'width={scale}\\textwidth')
+
     figure_content = fr'''
 \begin{{figure}}
 \begin{{center}}
@@ -94,10 +187,6 @@ def replace_insert_figure(match):
 \end{{figure}}
 '''
     return figure_content
-
-# Nome do arquivo .tex de entrada (assumindo que esteja na mesma pasta do arquivo Python)
-tex_file_name = 'Article1.tex'
-
 # Lê o arquivo de entrada, remove os asteriscos
 with open(tex_file_name, "r", encoding="utf-8") as f:
     conteudo = f.read()
@@ -107,6 +196,7 @@ with open(tex_file_name, "r", encoding="utf-8") as f:
     conteudo_atualizado = re.sub(r"\\begin{eqnarray}(\s*\\label{[^}]+})", r"\\begin{eqnarray}\g<1>", conteudo_atualizado)
     conteudo_atualizado = conteudo_atualizado.replace('\\bm{', '\\mathbf{')
     conteudo_atualizado = conteudo_atualizado.replace('\\hdots', '\\dots')
+    conteudo_atualizado = re.sub(r'\\parbox{\d+cm}', r'', conteudo_atualizado)
     conteudo_atualizado = conteudo_atualizado.replace('\\centering', '')
     conteudo_atualizado = re.sub(r'\\hspace{.*?}', '', conteudo_atualizado)
     conteudo_atualizado = re.sub(r'\\InsertFigure(\[.*?\])?\{(.*?)\}\{(.*?)\}\{(.*?)\}', replace_insert_figure, conteudo_atualizado)
@@ -114,6 +204,9 @@ with open(tex_file_name, "r", encoding="utf-8") as f:
     conteudo_atualizado = re.sub(r"(\\begin{document})", r"\1\n" + copy_abstract_eng(tex_file_name) + "\n", conteudo_atualizado, 1, re.DOTALL)
     conteudo_atualizado = conteudo_atualizado.replace('\\resizebox{\columnwidth}{!}', '')
     conteudo_atualizado = conteudo_atualizado.replace('\\columnwidth', '\\textwidth')
+    conteudo_atualizado = re.sub(r'\\begin\{([^}]*)\} \\label\{([^}]*)\}', r'\\begin{figure} {(\2)} \\end{figure} \\begin{\1} \\label{\2}', conteudo_atualizado)
+    conteudo_atualizado = replace_cite(conteudo_atualizado, file_path_bib)
+    conteudo_atualizado = replace_citeauthor(conteudo_atualizado, file_path_bib)
 
 def convert_tex_to_html(tex_content):
     try:
@@ -123,17 +216,20 @@ def convert_tex_to_html(tex_content):
     except Exception as e:
         print(f'Ocorreu um erro durante a conversão: {e}')
         return None
-
 # Define a função para substituir o conteúdo necessário do html
 def substituir_conteudo(conteudo_com_id):
+    conteudo_com_id = re.sub(r'\(<a', r'<a', conteudo_com_id)
+    conteudo_com_id = re.sub(r'a>\)', r'a>', conteudo_com_id)
+    conteudo_com_id = re.sub(r'>\[(\d+)\]<', r'>(\1)<', conteudo_com_id)
     conteudo_com_id = conteudo_com_id.replace('\\textsuperscript{\\textregistered}', '&reg;')
     conteudo_com_id = conteudo_com_id.replace('\\textregistered', '&reg;')
     conteudo_com_id = conteudo_com_id.replace('\\copyright', '&copy;')
     conteudo_com_id = re.sub(r'class="math display">\\\[\\label\{([^}]*)\}', r'class="math display" id="\1">\\[', conteudo_com_id)
+    conteudo_com_id = conteudo_com_id.replace('class="math display">\\[\\begin{aligned}', 'class="math display">\\[\\egin{aligned}')
+    conteudo_com_id = re.sub(r'class="math display">\\\[\\egin\{aligned\}\n\n\\label\{([^}]*)\}', r'class="math display" id="\1">\\[\\begin{aligned}', conteudo_com_id)
     # Extrair o valor numérico do estilo (95.0)
     regex = r'style="width:(\d+\.\d+)%"'
     matches = re.findall(regex, conteudo_com_id)
-
     for match in matches:
         # Calcular o novo valor no formato desejado (calc(0.95*350px))
         valor = float(match)
@@ -141,48 +237,72 @@ def substituir_conteudo(conteudo_com_id):
         # Substituir o valor original pelo novo valor no conteúdo
         conteudo_com_id = conteudo_com_id.replace(f'style="width:{match}%"', f'style="width:{novo_valor}"')
     return conteudo_com_id
-
 # Chame a função para realizar a conversão
 html_content = convert_tex_to_html(conteudo_atualizado)
 resultados = buscar_termos_arquivo_tex(tex_file_name)
-
 # Extrair bib
 def extract_info(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         bib_data = file.read().replace(r'\&', '&')
+        bib_data = bib_data.replace('--', '–')
+        bib_data = re.sub(r'\{|\}', '', bib_data)
+
     entries = bib_data.split('\n\n')
     output = ""
     for entry in entries:
         lines = entry.split('\n')
         info = {}
+        ignore_entry = False # Variável para indicar se o registro deve ser ignorado
         for line in lines:
             line = line.strip()
             if line.startswith('@'):
+                if line.lower().startswith('@proceedings'):
+                    ignore_entry = True # Marca o registro para ser ignorado
                 continue
             elif line.startswith('}'):
                 break
-            elif '=' in line:
+            elif '=' in line and not ignore_entry:
                 key, value = line.split('=', 1)
                 info[key.strip()] = value.strip().strip(',{}')
-        # Adiciona o conteúdo formatado à saída
-        formatted_output = format_output(info)
-        if formatted_output:
-            output += formatted_output
+
+        if not ignore_entry:
+            # Adiciona o conteúdo formatado à saída
+            formatted_output = format_output(info)
+            if formatted_output:
+                output += formatted_output
+        output = output.replace('&,', '&')
     return output
 
 def format_output(info):
     author = info.get('author')
     title = info.get('title')
+    institution = info.get('institution')
     journal = info.get('journal')
+    publisher = info.get('publisher')
     volume = info.get('volume')
     number = info.get('number')
     pages = info.get('pages')
     year = info.get('year')
     doi = info.get('doi')
 
-    authors = ', '.join(author.split(' and ')) if author else ""
+    author_list = author.split(' and ') if author else []
+    formatted_authors = []
+
+    for i, name in enumerate(author_list):
+        name_parts = name.strip().split()
+        last_name = name_parts[0]
+        initials = ' '.join(part[0].upper() + '.' for part in name_parts[1:]) if len(name_parts) > 1 else ""
+        formatted_author = f"{last_name} {initials}"
+        formatted_authors.append(formatted_author)
+        if i == len(author_list) - 2:
+            formatted_authors.append("&")
+
+    authors = ', '.join(formatted_authors)
+
     title = title if title else ""
+    institution = institution if institution else ""
     journal = journal if journal else ""
+    publisher = publisher if publisher and not journal else ""
     volume = volume if volume else ""
     number = number if number else ""
     pages = pages if pages else ""
@@ -194,10 +314,14 @@ def format_output(info):
         output += f"<p>{authors} ({year})."
     if title:
         output += f" {title}."
+    if institution:
+        output += f" {institution}."
     if journal:
-        output += f" {journal},"
+        output += f" <em>{journal}</em>,"
+    if publisher:
+        output += f" {publisher}."
     if volume:
-        output += f" {volume}"
+        output += f" <em>{volume}</em>"
     if number:
         output += f"({number})"
     if pages:
@@ -207,13 +331,12 @@ def format_output(info):
     output += "</p>"
     return output
 
-file_path_bib = 'Article1.bib'
 bib_output = extract_info(file_path_bib)
 
 if html_content is not None:
     conteudo_com_id = substituir_conteudo(html_content)
-    new_html_file = f"{os.path.splitext(tex_file_name)[0]}.html"
-    with open(new_html_file, 'w', encoding='utf-8') as f:
+    nome_arquivo_saida = 'begin.html'
+    with open(nome_arquivo_saida, 'w', encoding='utf-8') as f:
         html_content = f'''<!DOCTYPE html>
 <html lang="en-US">
 <head>
@@ -222,7 +345,11 @@ if html_content is not None:
         html {{
             scroll-behavior: smooth;
         }}
-        
+
+        a {{
+            text-decoration: none;
+        }}
+
         body {{
             font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans, Ubuntu, Droid Sans, Helvetica Neue, sans-serif;
             word-break: normal;
@@ -235,6 +362,10 @@ if html_content is not None:
             display: block;
             justify-content: center;
             align-items: center;
+        }}
+
+        figure p span {{
+            float: right;
         }}
 
         h1, h2, h3 {{
@@ -287,7 +418,7 @@ if html_content is not None:
         table {{
             margin: 0 auto;
             border-collapse: collapse;
-        }} 
+        }}
     </style>
     <meta charset="utf-8">
 </head>
@@ -295,7 +426,7 @@ if html_content is not None:
     <h1>{list(resultados.values())[0]}</h1>
     <h3>{list(resultados.values())[1]}</h3>
     <p><strong>DOI</strong> {list(resultados.values())[2]}</p>
-    <p><strong>Citation</strong> Semina: Ciências Exatas e Tecnológicas, Londrina{''.join(list(resultados.values())[3:])}</p>
+    <p><strong>Citation</strong> Semin., Ciênc. Exatas Tecnol.{''.join(list(resultados.values())[3:])}</p>
     <h3>Abstract:</h3>
     {conteudo_com_id}
     <h1>References</h1>
@@ -303,3 +434,15 @@ if html_content is not None:
 </body>
 </html>'''
         f.write(html_content)
+
+def substituir_texto(texto):
+    texto_modificado = re.sub(r'class="math display">\\\[\\egin\{aligned\}\n\n\\label\{([^}]*)\}', r'class="math display" id="\1">\\[\\begin{aligned}', texto)
+    return texto_modificado
+
+with open(nome_arquivo_saida, "r", encoding="utf-8") as arquivo:
+    texto_original = arquivo.read()
+
+texto_modificado = substituir_texto(texto_original)
+
+with open(nome_arquivo_saida, "w", encoding="utf-8") as arquivo_saida:
+    arquivo_saida.write(texto_modificado)
