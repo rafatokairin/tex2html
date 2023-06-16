@@ -93,8 +93,7 @@ def replace_citeauthor(text, bib_file):
                 replacements.append(f'[{key} - not found]')
         # Realiza a substituição no texto original
         replacements_text = '; '.join(replacements)
-        text = text.replace(
-            f'\\citeauthor{{{match}}}', f'{replacements_text}')
+        text = text.replace(f'\\citeauthor{{{match}}}', f'{replacements_text}')
     return text
 
 def copy_abstract_eng(tex_file_name):
