@@ -3,8 +3,8 @@ import pypandoc
 from bs4 import BeautifulSoup
 import re
 
-file_path_bib = 'Article1.bib'
-tex_file_name = 'Article1.tex'
+file_path_bib = 'Article.bib'
+tex_file_name = 'Article.tex'
 
 def replace_cite(text, bib_file):
     # Lê o arquivo .bib e armazena as informações em um dicionário
@@ -224,8 +224,7 @@ def substituir_conteudo(conteudo_com_id):
     conteudo_com_id = conteudo_com_id.replace('\\textregistered', '&reg;')
     conteudo_com_id = conteudo_com_id.replace('\\copyright', '&copy;')
     conteudo_com_id = re.sub(r'class="math display">\\\[\\label\{([^}]*)\}', r'class="math display" id="\1">\\[', conteudo_com_id)
-    conteudo_com_id = conteudo_com_id.replace('class="math display">\\[\\begin{aligned}', 'class="math display">\\[\\egin{aligned}')
-    conteudo_com_id = re.sub(r'class="math display">\\\[\\egin\{aligned\}\n\n\\label\{([^}]*)\}', r'class="math display" id="\1">\\[\\begin{aligned}', conteudo_com_id)
+    conteudo_com_id = re.sub(r'class="math display">\\\[\\begin\{aligned\}\n\n\\label\{([^}]*)\}', r'class="math display" id="\1">\\[\\begin{aligned}', conteudo_com_id)
     # Extrair o valor numérico do estilo (95.0)
     regex = r'style="width:(\d+\.\d+)%"'
     matches = re.findall(regex, conteudo_com_id)
@@ -435,7 +434,7 @@ if html_content is not None:
         f.write(html_content)
 
 def substituir_texto(texto):
-    texto_modificado = re.sub(r'class="math display">\\\[\\egin\{aligned\}\n\n\\label\{([^}]*)\}', r'class="math display" id="\1">\\[\\begin{aligned}', texto)
+    texto_modificado = re.sub(r'class="math display">\\\[\\begin\{aligned\}\n\\label\{([^}]*)\}', r'class="math display" id="\1">\\[\\begin{aligned}', texto)
     return texto_modificado
 
 with open(nome_arquivo_saida, "r", encoding="utf-8") as arquivo:
