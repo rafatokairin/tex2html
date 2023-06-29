@@ -116,6 +116,30 @@ def replace_citeauthor(text, bib_file):
     
     return text
 
+def adicionar_numero_caption(texto):
+    numero = 1
+    resultado = ""
+    for linha in texto.splitlines():
+        if "<caption>" in linha:
+            resultado += linha.replace("<caption>", f"<caption><strong>Table {numero} - </strong>")
+            numero += 1
+        else:
+            resultado += linha
+        resultado += "\n"
+    return resultado
+
+def adicionar_numero_figcaption(texto):
+    numero = 1
+    resultado = ""
+    for linha in texto.splitlines():
+        if "<figcaption>" in linha:
+            resultado += linha.replace("<figcaption>", f"<figcaption><strong>Figure {numero} - </strong>")
+            numero += 1
+        else:
+            resultado += linha
+        resultado += "\n"
+    return resultado
+
 def copy_abstract_eng(tex_file_name):
     with open(tex_file_name, "r", encoding="utf-8") as f:
         conteudo = f.read()
@@ -220,6 +244,7 @@ with open(tex_file_name, "r", encoding="utf-8") as f:
     conteudo_atualizado = conteudo_atualizado.replace('\\setlength', '')
     conteudo_atualizado = conteudo_atualizado.replace('\\centering', '')
     conteudo_atualizado = re.sub(r'\\hspace{.*?}', '', conteudo_atualizado)
+    conteudo_atualizado = re.sub(r'\\cline{.*?}', '', conteudo_atualizado)
     conteudo_atualizado = re.sub(r'\\InsertFigure(\[.*?\])?\{(.*?)\}\{(.*?)\}\{(.*?)\}', replace_insert_figure, conteudo_atualizado)
     conteudo_atualizado = re.sub(r'\\includegraphics(\[.*?\])?\{(.*?)(\.(?!jpeg$)\w+)?\}', lambda match: f'\\includegraphics{match.group(1)}{{{match.group(2)}{".png" if match.group(3) != ".jpeg" else match.group(3)}}}', conteudo_atualizado)
     conteudo_atualizado = re.sub(r"(\\begin{document})", r"\1\n" + copy_abstract_eng(tex_file_name) + "\n", conteudo_atualizado, 1, re.DOTALL)
@@ -249,6 +274,8 @@ def substituir_conteudo(conteudo_com_id):
     conteudo_com_id = conteudo_com_id.replace('\\copyright', '&copy;')
     conteudo_com_id = re.sub(r'class="math display">\\\[\\label\{([^}]*)\}', r'class="math display" id="\1">\\[', conteudo_com_id)
     conteudo_com_id = re.sub(r'class="math display">\\\[\\begin\{aligned\}\n\n\\label\{([^}]*)\}', r'class="math display" id="\1">\\[\\begin{aligned}', conteudo_com_id)
+    conteudo_com_id = adicionar_numero_caption(conteudo_com_id)
+    conteudo_com_id = adicionar_numero_figcaption(conteudo_com_id)
     # Extrair o valor numérico do estilo (95.0)
     regex = r'style="width:(\d+\.\d+)%"'
     matches = re.findall(regex, conteudo_com_id)
@@ -268,6 +295,7 @@ def extract_info(bib_file):
         bib_data = file.read()
     entries = re.findall(r'@(\w+)\{(.*?),\n(.*?)\n\}', bib_data, re.DOTALL)
     extracted_info = []
+
     for entry_type, entry_key, entry_content in entries:
         info = {'type': entry_type, 'key': entry_key}
         fields = re.findall(r'(\w+)\s*=\s*{(.+?)}', entry_content)
@@ -280,6 +308,7 @@ def format_info(bib_info):
     formatted_info = []
     for info in bib_info:
         formatted_entry = '<p id="{}">'.format(info['key'])
+
         if 'author' in info:
             authors = re.split(r'\s+and\s+', info['author'])
             if len(authors) > 1:
@@ -298,12 +327,13 @@ def format_info(bib_info):
         if 'pages' in info:
             formatted_entry += ' ' + info['pages'] + '.'
         if 'doi' in info:
-            formatted_entry += ' ' + info['doi']
+            formatted_entry += ' https://doi.org/' + info['doi']
         formatted_entry += '</p>'
         formatted_info.append(formatted_entry)
     return formatted_info
 
 bib_file = 'Article.bib'  # Substitua pelo caminho correto do arquivo .bib
+
 bib_info = extract_info(bib_file)
 formatted_info = format_info(bib_info)
 
@@ -327,9 +357,9 @@ if html_content is not None:
         body {{
             font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans, Ubuntu, Droid Sans, Helvetica Neue, sans-serif;
             word-break: normal;
-            line-height: 2;
+            line-height: 1.5;
             text-align: justify;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 400;
             margin-right: 400px;
             margin-left: 400px;
@@ -361,12 +391,18 @@ if html_content is not None:
         thead th {{
             background-color: #f2f2f2;
             font-weight: bold;
-            padding: 10px;
+            padding-bottom: 2px;
+            padding-top: 2px;
+            padding-left: 12px;
+            padding-right: 12px;
             text-align: center;
         }}
 
         tbody td {{
-            padding: 10px;
+            padding-bottom: 2px;
+            padding-top: 2px;
+            padding-left: 12px;
+            padding-right: 12px;
             text-align: center;
         }}
 
@@ -378,15 +414,10 @@ if html_content is not None:
             background-color: #e6e6e6;
         }}
 
-        table tbody tr:last-child td {{
-            border-bottom: 1px solid black;
-        }}
-
         thead:before,
         thead:after {{
             content: "";
             display: table-row;
-            border-bottom: 1px solid black;
         }}
 
         table {{
