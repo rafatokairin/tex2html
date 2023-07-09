@@ -293,19 +293,25 @@ resultados = buscar_termos_arquivo_tex(tex_file_name)
 def extract_info(bib_file):
     with open(bib_file, 'r') as file:
         bib_data = file.read()
+
     entries = re.findall(r'@(\w+)\{(.*?),\n(.*?)\n\}', bib_data, re.DOTALL)
     extracted_info = []
 
     for entry_type, entry_key, entry_content in entries:
         info = {'type': entry_type, 'key': entry_key}
+
         fields = re.findall(r'(\w+)\s*=\s*{(.+?)}', entry_content)
+
         for field_name, field_value in fields:
             info[field_name.lower()] = field_value
+
         extracted_info.append(info)
+
     return extracted_info
 
 def format_info(bib_info):
     formatted_info = []
+
     for info in bib_info:
         formatted_entry = '<p id="{}">'.format(info['key'])
 
@@ -327,7 +333,8 @@ def format_info(bib_info):
         if 'pages' in info:
             formatted_entry += ' ' + info['pages'] + '.'
         if 'doi' in info:
-            formatted_entry += ' https://doi.org/' + info['doi']
+            formatted_entry += ' <a target="_blank" href="https://doi.org/' + info['doi'] + '">https://doi.org/' + info['doi'] + '</a>'
+
         formatted_entry += '</p>'
         formatted_info.append(formatted_entry)
     return formatted_info
