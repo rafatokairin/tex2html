@@ -371,12 +371,15 @@ if html_content is not None:
             top: 0;
             right: 0;
             padding: 10px;
+            margin-right: 20px;
         }}
         
         .menu a {{
             display: block;
             margin-bottom: 8px;
             text-decoration: none;
+            overflow-wrap: break-word;
+            max-width: 150px;
         }}
 
         figure p span {{
