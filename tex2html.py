@@ -35,7 +35,6 @@ def replace_cite(text, bib_file):
                 if author_match and year_match:
                     author = author_match.group(1)
                     year = year_match.group(1)
-
                     authors = author.split(' and ')
                     if len(authors) > 1:
                         if len(authors) > 2:
@@ -170,6 +169,7 @@ def buscar_termos_arquivo_tex(filename):
     conteudo = conteudo.replace("\\\\", "")
     # Define uma lista com os termos que queremos buscar
     termos = [
+        r"\\Area{(.+?)}",
         r"\\ArticleTitleENG{(.+?)}",
         r"\\AuthorHeader{(.+?)[\\\\}]",
         r"\\DOI{(.+?)[\\\\}]",
@@ -215,6 +215,7 @@ def replace_insert_figure(match):
 \end{{figure}}
 '''
     return figure_content
+
 # Lê o arquivo de entrada, remove os asteriscos
 with open(tex_file_name, "r", encoding="utf-8") as f:
     conteudo = f.read()
@@ -247,6 +248,7 @@ def convert_tex_to_html(tex_content):
     except Exception as e:
         print(f'Ocorreu um erro durante a conversão: {e}')
         return None
+    
 # Define a função para substituir o conteúdo necessário do html
 def substituir_conteudo(conteudo_com_id):
     conteudo_com_id = re.sub(r'&lt;|&gt;', lambda match: '<' if match.group() == '&lt;' else '>', conteudo_com_id)
@@ -342,7 +344,22 @@ if html_content is not None:
         html_content = f'''<!DOCTYPE html>
 <html lang="en-US">
 <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tinos&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap">
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script>
+    function openNewPage() {{
+        var query = document.getElementById("query").value;
+        if (query.trim() === "")
+            return false;
+        else {{
+            var searchUrl = "https://ojs.uel.br/revistas/uel/index.php/semexatas/search/index?query=" + encodeURIComponent(query);
+            window.open(searchUrl, "_blank");
+            return false;
+        }}
+    }}
+    </script>
     <style>
         html {{
             scroll-behavior: smooth;
@@ -353,33 +370,91 @@ if html_content is not None:
         }}
 
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans, Ubuntu, Droid Sans, Helvetica Neue, sans-serif;
+            font-family: 'Tinos', serif;
             word-break: normal;
             line-height: 1.5;
             text-align: justify;
-            font-size: 14px;
-            font-weight: 400;
+            font-size: 15px;
+            font-weight: 500;
+            margin: 0;
+            padding: 0;
+        }}
+
+        .article-content {{
             margin-right: 400px;
             margin-left: 400px;
+        }}
+
+        header {{
+            width: 100%;
+        }}
+
+        .header-container {{
+            margin: 0 !important;
+            padding: 0 !important;
+        }}
+
+        .header-container img {{
             display: block;
-            justify-content: center;
-            align-items: center;
+            width: 100%;
+            height: auto;
+            min-width: 100vh;
+            margin: 0 !important;
+            padding: 0 !important;
+        }}
+
+        .image-text {{
+            position: absolute;
+            top: 25px;
+            right: 50px;
+            color: black;
+            font-size: 18px;
+            font-family: 'Josefin Sans', sans-serif;
+            font-weight: 500;
+            text-align: right;
+            direction: rtl;
+        }}
+
+        .search {{
+            float: left;
+            margin-top: 0px;
+            padding: 20px;
+        }}
+
+        .search_input input,
+        .search_input button {{
+            border-radius: 0; 
+            height: 36px;
+            font-size: 15px; 
+            border: 1px solid #a0a0a0;
+            font-weight: 500;
+        }}
+
+        .blue-background {{
+            background-color: #346af3;
+        }}
+
+        .white-icon {{
+            color: white;
+            font-size: 15px;
+            width: 36px;
+        }}
+
+        .search_input button:hover {{
+        cursor: pointer;
         }}
 
         .menu {{
             position: fixed;
-            top: 0;
+            margin-top: 0px;
             right: 0;
             padding: 10px;
-            margin-right: 20px;
         }}
         
         .menu a {{
             display: block;
             margin-bottom: 8px;
             text-decoration: none;
-            overflow-wrap: break-word;
-            max-width: 150px;
         }}
 
         figure p span {{
@@ -387,7 +462,8 @@ if html_content is not None:
         }}
 
         h1, h2, h3 {{
-            font-weight: 400;
+            font-family: 'Josefin Sans', sans-serif;
+            font-weight: 700;
         }}
 
         img {{
@@ -440,10 +516,18 @@ if html_content is not None:
         }}
 
         @media (max-width: 992px) {{
-            body {{
+            .article-content {{
                 margin: 10px;
             }}
+
+            header {{
+                display: none;
+            }}
             
+            .search {{
+                display: none;
+            }}
+
             .menu {{
                 display: none;
             }}
@@ -460,18 +544,38 @@ if html_content is not None:
     <meta charset="utf-8">
 </head>
 <body>
+    <header>
+        <div class="header-container">
+            <img src="Header.png">
+            <div class="image-text">{list(resultados.values())[0]}</div>
+        </div>
+    </header>
+    <div class="search">
+        <form class="_cmp_form" method="get" action="https://ojs.uel.br/revistas/uel/index.php/semexatas/search/index" onsubmit="return openNewPage()">
+            <div class="search_input">
+                <input type="text" id="query" name="query" value="" class="query form-control" placeholder="Search">
+                <button class="btn btn-primary btn-lg blue-background" type="submit">
+                    <i class="fas fa-search white-icon"></i>
+                </button>
+            </div>
+        </form>
+    </div>
     <div class="menu">
         <h3>Outline:</h3>
+        <a href="#article-abstract">Abstract</a>
         {menu_content}
+        <a href="#article-references">References</a>
     </div>
-    <h1>{list(resultados.values())[0]}</h1>
-    <h3>{list(resultados.values())[1]}</h3>
-    <p><strong>DOI</strong> {list(resultados.values())[2]}</p>
-    <p><strong>Citation</strong> Semin., Ciênc. Exatas Tecnol.{''.join(list(resultados.values())[3:])}</p>
-    <h3>Abstract:</h3>
-    {conteudo_com_id}
-    <h1>References</h1>
-    {''.join(formatted_info)}
+    <div class="article-content">
+        <h1>{list(resultados.values())[1]}</h1>
+        <h3>{list(resultados.values())[2]}</h3>
+        <p><strong>DOI</strong> {list(resultados.values())[3]}</p>
+        <p><strong>Citation</strong> Semin., Ciênc. Exatas Tecnol.{''.join(list(resultados.values())[4:])}</p>
+        <h3 id="article-abstract">Abstract:</h3>
+        {conteudo_com_id}
+        <h1 id="article-references">References</h1>
+        {''.join(formatted_info)}
+    </div>
 </body>
 </html>'''
         f.write(html_content)
