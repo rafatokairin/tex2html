@@ -1,0 +1,143 @@
+/* Ver mais / Ver menos */
+.read-more-content {
+    display: none;
+}
+
+.read-more-checkbox:checked~.read-more-content {
+    display: block;
+}
+
+.read-more-checkbox {
+    display: none;
+}
+
+.read-more-label {
+    color: black;
+    cursor: pointer;
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 10px;
+}
+
+.read-more-label:hover {
+    color: #006798;
+}
+
+.read-more-label::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 5px solid black;
+}
+
+.read-more-checkbox:checked+.read-more-label::before {
+    transform: translateY(-50%) rotate(90deg);
+}
+
+/* site */
+.hero-section .iphone-wrap .phone-2 {
+    margin-top: 200px;
+}
+
+.hero-section {
+    background: linear-gradient(to right, rgba(39, 70, 133, 0.0) 0%, rgba(61, 179, 197, 0.0) 0%), url('https://raw.githubusercontent.com/gabrielpie6/Semina/master/background.png') !important;
+    background-repeat: no-repeat;
+    background-size: cover !important;
+    background-position: center;
+    position: relative;
+}
+
+.hero-section .wave {
+    bottom: -250px;
+}
+
+.hero-section .wave svg {
+    width: auto;
+    height: 385px;
+}
+
+.hero-section.inner-page {
+    height: 50vh;
+}
+
+main .page {
+    max-width: 940px !important;
+}
+
+.mt-5 {
+    display: none;
+}
+
+#header.header-scrolled .logo img{
+    display: none;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: #fff;
+}
+
+.logo {
+    display: block;
+    margin-top: 50px;
+    max-height: 200px;
+}
+
+.obj_article_details .entry_details img {
+    width: auto;
+    height: auto;
+}
+
+#header .logo .img-fluid {
+    max-height: 300px !important;
+    max-width: 300px !important;
+    display: block;
+    position: fixed !important;
+    text-align: left !important;
+    transition: all .5s;
+    width: auto;
+    position: fixed !important;
+    left: 0 !important;
+}
+
+.footer img {
+    height: auto;
+    width: auto;
+}
+
+html,
+body {
+    scroll-behavior: smooth;
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Noto Sans, Ubuntu, Droid Sans, Helvetica Neue, sans-serif;
+    word-break: normal;
+    text-align: justify;
+    font-size: 15px;
+    line-height: 2;
+}
+
+@media (max-width: 992px) {
+    .footer {
+        display: none;
+    }
+
+    .col-lg-4 {
+        display: none;
+    }
+}
+
+.citations-count {
+    grid-template-columns: none !important;
+}
+
+.citations-count img {
+    max-width: 150px;
+}
+
+.fa-globe:before {
+    content: "Language" !important;
+    font-family: "Noto Sans",-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto","Oxygen-Sans","Ubuntu","Cantarell","Helvetica Neue",sans-serif;
+    font-weight: 500;
+}
