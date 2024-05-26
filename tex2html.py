@@ -172,6 +172,10 @@ def buscar_termos_arquivo_tex(filename):
         r"\\Area{(.+?)}",
         r"\\ArticleTitleENG{(.+?)}",
         r"\\AuthorHeader{(.+?)[\\\\}]",
+        r"\\ReceivedDate{(.+?)[\\\\}]",
+        r"\\RevisedDate{(.+?)[\\\\}]",
+        r"\\AcceptedDate{(.+?)[\\\\}]",
+        r"\\PublishedDate{(.+?)[\\\\}]",
         r"\\DOI{(.+?)[\\\\}]",
         r"\\Year{(.+?)}",
         r"\\Volume{(.+?)}",
@@ -226,6 +230,9 @@ with open(tex_file_name, "r", encoding="utf-8") as f:
     conteudo_atualizado = conteudo_atualizado.replace('\\bm{', '\\mathbf{')
     conteudo_atualizado = conteudo_atualizado.replace('\\hdots', '\\dots')
     conteudo_atualizado = re.sub(r'\\parbox{\d+cm}', r'', conteudo_atualizado)
+    conteudo_atualizado = conteudo_atualizado.replace('\\textfractionsolidus', '/')
+    conteudo_atualizado = conteudo_atualizado.replace('\\textbullet', '⋅')
+    conteudo_atualizado = conteudo_atualizado.replace('\\textsc', '\\text')
     conteudo_atualizado = conteudo_atualizado.replace('\\footnotesize', '')
     conteudo_atualizado = conteudo_atualizado.replace('\\setlength', '')
     conteudo_atualizado = conteudo_atualizado.replace('\\centering', '')
@@ -449,6 +456,7 @@ if html_content is not None:
             margin-top: 0px;
             right: 0;
             padding: 10px;
+            font-size: 18px;
         }}
         
         .menu a {{
@@ -515,6 +523,26 @@ if html_content is not None:
             border-collapse: collapse;
         }}
 
+        p#data {{
+            font-size: 12px;
+        }}
+
+        .nomes-container {{
+        display: flex;
+        gap: 10px;
+        }}
+
+        .nomes-container a {{
+            float: left;
+            display: flex;
+            text-decoration: none;
+        }}
+
+        .nomes-container .orcid-icon {{
+            height: 20px;
+            margin-left: 5px;
+        }}
+        
         @media (max-width: 992px) {{
             .article-content {{
                 margin: 10px;
@@ -569,8 +597,9 @@ if html_content is not None:
     <div class="article-content">
         <h1>{list(resultados.values())[1]}</h1>
         <h3>{list(resultados.values())[2]}</h3>
-        <p><strong>DOI</strong> {list(resultados.values())[3]}</p>
-        <p><strong>Citation</strong> Semin., Ciênc. Exatas Tecnol.{''.join(list(resultados.values())[4:])}</p>
+        <p><strong>DOI</strong> {list(resultados.values())[7]}</p>
+        <p><strong>Citation</strong> Semin., Ciênc. Exatas Tecnol.{''.join(list(resultados.values())[8:])}</p>
+        <p id="data"><strong>Received:</strong> {list(resultados.values())[3]} <strong>Received in revised for:</strong> {list(resultados.values())[4]} <strong>Accepted:</strong> {list(resultados.values())[5]} <strong>Available online:</strong> {list(resultados.values())[6]}</p>
         <h3 id="article-abstract">Abstract:</h3>
         {conteudo_com_id}
         <h1 id="article-references">References</h1>
