@@ -4,7 +4,8 @@ Este repositório contém um **script em Python** desenvolvido para **automatiza
 
 O projeto foi desenvolvido no contexto do **Semina: Ciências Exatas e Tecnológicas**, com o objetivo de garantir **formatação correta**, **acessibilidade** e **compatibilidade com a web** durante a publicação dos artigos.
 
-Site do periódico:  
+Site do periódico:
+
 https://ojs.uel.br/revistas/uel/index.php/semexatas
 
 ---
