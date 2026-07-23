@@ -1,0 +1,8 @@
+# Dependências do conversor Tex2HTML.
+# pypandoc_binary já traz o Pandoc embutido — não precisa instalar o Pandoc à parte.
+pypandoc_binary>=1.13
+Pillow>=9.0
+beautifulsoup4>=4.11
+
+# Somente para gerar o executável (.exe) — veja BUILD.md:
+# pyinstaller>=6.0
