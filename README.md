@@ -42,6 +42,14 @@ Durante a conversão a ferramenta:
   figuras, tabelas e equações em links numerados que apontam para o alvo — e
   numera as equações com `\tag` (renderizado pelo MathJax);
 - numera automaticamente as legendas de **figuras** e **tabelas**;
+- monta as **referências** em estilo APA (iniciais dos autores, periódico/livro em
+  itálico, volume(número), páginas, DOI/URL clicável), tratando os vários tipos de
+  entrada do `.bib` (article, book, inproceedings, misc, thesis…);
+- suporta **código** no texto (`verbatim`, `lstlisting`, `minted`, `\texttt`,
+  `\verb`) com realce de sintaxe, além de **notas de rodapé**, **links**
+  (`\href`/`\url`), **cores** (`\textcolor`) e as fórmulas via MathJax;
+- exibe as figuras com **altura uniforme** e, ao **clicar**, abre a imagem em tela
+  cheia (lightbox) para ver em detalhe;
 - **dimensiona as imagens** de acordo com o `scale` do LaTeX (que o Pandoc
   descarta), usando o tamanho real em pixels, com `max-width:100%` para nenhuma
   imagem estourar a largura da página;
@@ -49,6 +57,12 @@ Durante a conversão a ferramenta:
   `fig6Nova`, o arquivo é `fig6NOVA`) — isso evita imagem quebrada no OJS, cujo
   servidor (Linux) diferencia maiúsculas, ao contrário do Windows;
 - **remove comentários** do LaTeX e avisa sobre figuras citadas que não existem;
+- usa **âncoras com namespace** (`ref-` para bibliografia, `xref-` para
+  figuras/tabelas/equações) para os links texto→referência nunca colidirem entre
+  si nem com os ids gerados pelo Pandoc — resultando em HTML sem ids duplicados;
+- **valida** o documento e **avisa** (sem interromper) sobre citações sem entrada
+  no `.bib`, referências para rótulos inexistentes, chaves/rótulos duplicados e
+  qualquer id repetido no HTML final;
 - quando o `.tex` tem um erro real (ex.: chave `{` sem fechar), mostra uma
   **mensagem clara com a linha aproximada** em vez de travar com erro técnico.
 - monta a lista de **referências** a partir do `.bib`;
@@ -103,7 +117,8 @@ tex2ojs/                     → pacote principal
 │   ├── bibliography.py      → parsing do .bib, citações e referências
 │   ├── crossref.py          → referências cruzadas (\ref, \eqref) e numeração
 │   ├── links.py             → tokens seguros p/ inserir links após o Pandoc
-│   ├── lint.py              → detecção de erros de LaTeX (chaves/$ desbalanceados)
+│   ├── lint.py              → erros de LaTeX que travam o Pandoc (chaves/$)
+│   ├── validation.py        → avisos: cites/refs sem alvo, chaves/ids duplicados
 │   ├── latex.py             → pré-processamento do .tex e metadados
 │   ├── html.py              → Pandoc + pós-processamento do HTML
 │   ├── template.py          → template HTML/CSS da revista

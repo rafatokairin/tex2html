@@ -91,7 +91,7 @@ def resolve_references(tex: str, labels: dict, registry) -> str:
             html = '<span class="ref-missing">(?)</span>'
             return registry.token(html)
         number = info[1]
-        anchor = f'<a href="#{label}">{number}</a>'
+        anchor = f'<a href="#xref-{label}">{number}</a>'
         return registry.token(f"({anchor})" if parenthesized else anchor)
 
     tex = re.sub(r"\\eqref\{([^}]*)\}", lambda m: link(m, True), tex)

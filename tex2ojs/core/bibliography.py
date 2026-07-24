@@ -121,6 +121,18 @@ def _authors_and_year(entry: dict):
     return label, year
 
 
+# Detecta um nome de autor escrito à mão imediatamente antes do \cite:
+#  - termina em "et al." / "et al.,"  (ex.: "Al-Hemoud et al., \cite{...}")
+#  - ou num sobrenome Capitalizado, com vírgula opcional (ex.: "Jeong, \cite{...}").
+_AUTHOR_BEFORE = re.compile(r"(?:et\s+al\.?|[A-ZÀ-Ý][A-Za-zÀ-ÿ.'\-]*),?\s*$")
+
+
+def _author_written_before(before: str) -> bool:
+    if not before:
+        return False
+    return bool(_AUTHOR_BEFORE.search(before))
+
+
 def replace_citations(text: str, entries: list, registry) -> str:
     """Substitui ``\\cite`` e ``\\citeauthor`` por citações no padrão da revista.
 
@@ -128,9 +140,19 @@ def replace_citations(text: str, entries: list, registry) -> str:
     ``links.LinkRegistry``); o token é trocado pelo HTML depois do Pandoc.
     """
     bib_by_key = {e["key"]: e for e in entries}
+    # Comandos "textuais" (Autor (ano)) vs "parentéticos" ((Autor, ano)).
+    _TEXTUAL = {"citeauthor", "citet", "citealt", "textcite"}
 
-    def build(match, is_author):
-        keys = [k.strip() for k in match.group(1).split(",") if k.strip()]
+    def build(match):
+        cmd = match.group(1)
+        keys = [k.strip() for k in match.group(2).split(",") if k.strip()]
+        textual = cmd in _TEXTUAL
+        before = text[:match.start()].rstrip()
+        # Modo inteligente: se o autor já foi escrito à mão logo antes do \cite,
+        # mostramos só o ano (evita "Autor et al., (Autor et al., ano)").
+        author_before = not textual and _author_written_before(before)
+        # Se o autor já abriu parêntese "(\cite{...})", não abrimos outro.
+        open_before = before.endswith("(")
         parts = []
         for key in keys:
             entry = bib_by_key.get(key)
@@ -138,54 +160,137 @@ def replace_citations(text: str, entries: list, registry) -> str:
                 parts.append(f"[{key} - not found]")
                 continue
             label, year = _authors_and_year(entry)
-            link = f'<a href="#{key}">{year}</a>'
-            if is_author:
+            link = f'<a href="#ref-{key}">{year}</a>'
+            if textual:
                 parts.append(f"{label} ({link})")
+            elif author_before:
+                parts.append(link)  # só o ano (autor já está no texto)
             else:
                 parts.append(f"{label}, {link}")
         joined = "; ".join(parts)
-        html = joined if is_author else f"({joined})"
-        return registry.token(html)
+        if textual or author_before or open_before:
+            return registry.token(joined)  # sem parênteses próprios
+        return registry.token(f"({joined})")
 
-    text = re.sub(r"\\citeauthor\{([^}]+)\}", lambda m: build(m, True), text)
-    text = re.sub(r"\\cite\{([^}]+)\}", lambda m: build(m, False), text)
-    return text
+    # Cobre \cite, \citep, \citet, \citeauthor, \citeyear… e argumentos opcionais
+    # como \cite[p. 5]{chave}.
+    return re.sub(r"\\(cite[a-zA-Z]*)\s*(?:\[[^\]]*\])*\{([^}]+)\}", build, text)
 
 
 # --------------------------------------------------------------------------- #
 # Lista de referências
 # --------------------------------------------------------------------------- #
 
+# Tipos cujo "título" é a própria obra (fica em itálico, estilo APA).
+_STANDALONE_TYPES = {
+    "book", "booklet", "proceedings", "manual", "phdthesis",
+    "mastersthesis", "techreport", "misc", "unpublished",
+}
+
+
+def _initials(given: str) -> str:
+    """'Rosana Laira' -> 'R. L.' (iniciais no estilo APA)."""
+    parts = [p for p in re.split(r"[\s.\-]+", given) if p]
+    return " ".join(f"{p[0].upper()}." for p in parts)
+
+
+def _format_author_apa(raw: str) -> str:
+    """Formata um autor como 'Sobrenome, I. I.' (ou mantém nomes institucionais)."""
+    raw = raw.strip()
+    institutional = raw.startswith("{")  # ex.: {{ContExt}} / {{Instituto Silva}}
+    name = clean_latex(raw).strip()
+    if not name:
+        return ""
+    if institutional or ("," not in name and len(name.split()) == 1):
+        return name
+    if "," in name:
+        surname, given = name.split(",", 1)
+        surname, given = surname.strip(), given.strip()
+    else:
+        parts = name.split()
+        surname, given = parts[-1], " ".join(parts[:-1])
+    ini = _initials(given)
+    return f"{surname}, {ini}" if ini else surname
+
+
+def _format_authors(raw: str) -> str:
+    """Lista de autores no estilo APA: 'A, F., B, G., & C, H.' (ou '… et al.')."""
+    authors = [a for a in re.split(r"\s+and\s+", raw) if a.strip()]
+    has_others = any(clean_latex(a).lower() == "others" for a in authors)
+    formatted = [_format_author_apa(a) for a in authors if clean_latex(a).lower() != "others"]
+    formatted = [f for f in formatted if f]
+    if not formatted:
+        return ""
+    if has_others:
+        return ", ".join(formatted) + ", et al."
+    if len(formatted) == 1:
+        return formatted[0]
+    return ", ".join(formatted[:-1]) + ", & " + formatted[-1]
+
+
 def format_references(entries: list) -> str:
-    """Formata a lista de referências (uma <p> por entrada, com âncora #chave)."""
+    """Formata a lista de referências (uma ``<p>`` por entrada, âncora ``#chave``).
+
+    Segue um estilo APA-simplificado, com iniciais dos autores, título do
+    periódico/livro em itálico, volume(número), páginas e DOI/URL clicável.
+    """
     out = []
+    seen = set()
     for info in entries:
-        p = f'<p id="{info["key"]}">'
-        if info.get("author"):
-            authors = [clean_latex(a) for a in re.split(r"\s+and\s+", info["author"]) if a.strip()]
-            others = bool(authors) and authors[-1].lower() == "others"
-            if others:
-                authors = authors[:-1]
-            if others:
-                formatted = ", ".join(authors) + " et al." if authors else "et al."
-            elif len(authors) > 1:
-                formatted = ", ".join(authors[:-1]) + " & " + authors[-1]
-            else:
-                formatted = authors[0] if authors else ""
-            p += formatted + " "
-        if info.get("year"):
-            p += "(" + clean_latex(info["year"]) + ")."
-        if info.get("title"):
-            p += " " + clean_latex(info["title"]) + "."
-        if info.get("publisher"):
-            p += " " + clean_latex(info["publisher"]) + "."
-        if info.get("volume") and info.get("number"):
-            p += " " + clean_latex(info["volume"]) + "(" + clean_latex(info["number"]) + "),"
-        if info.get("pages"):
-            p += " " + clean_latex(info["pages"]) + "."
-        if info.get("doi"):
-            doi = clean_latex(info["doi"])
-            p += f' <a target="_blank" href="https://doi.org/{doi}">https://doi.org/{doi}</a>'
-        p += "</p>"
-        out.append(p)
+        if info["key"] in seen:  # chave duplicada no .bib: mantém só a 1ª (evita id repetido)
+            continue
+        seen.add(info["key"])
+        etype = info.get("type", "")
+        get = lambda k: clean_latex(info.get(k, ""))
+        parts = []
+
+        authors = _format_authors(info.get("author", ""))
+        if authors:
+            parts.append(authors + ("" if authors.endswith(".") else "."))
+        if get("year"):
+            parts.append(f"({get('year')}).")
+
+        title = get("title")
+        if title:
+            parts.append(f"<em>{title}</em>." if etype in _STANDALONE_TYPES else f"{title}.")
+
+        journal, booktitle = get("journal"), get("booktitle")
+        vol, num, pages = get("volume"), get("number"), get("pages")
+        if journal:
+            s = f"<em>{journal}</em>"
+            if vol:
+                s += f", <em>{vol}</em>"
+            if num:
+                s += f"({num})"
+            if pages:
+                s += f", {pages}"
+            parts.append(s + ".")
+        elif booktitle:
+            s = f"In <em>{booktitle}</em>"
+            if pages:
+                s += f" (pp. {pages})"
+            parts.append(s + ".")
+            if get("publisher"):
+                parts.append(f"{get('publisher')}.")
+        else:
+            for field in ("publisher", "institution", "school", "organization"):
+                if get(field):
+                    parts.append(f"{get(field)}.")
+                    break
+            if pages and not journal:
+                parts.append(f"pp. {pages}.")
+
+        if etype in _STANDALONE_TYPES and get("howpublished") and not (journal or booktitle):
+            parts.append(f"{get('howpublished')}.")
+
+        doi, url = get("doi"), get("url")
+        if doi:
+            parts.append(f'<a target="_blank" href="https://doi.org/{doi}">https://doi.org/{doi}</a>')
+        elif url:
+            parts.append(f'<a target="_blank" href="{url}">{url}</a>')
+        if get("note"):
+            parts.append(f"{get('note')}.")
+
+        body = " ".join(p for p in parts if p)
+        out.append(f'<p id="ref-{info["key"]}">{body}</p>')
     return "".join(out)

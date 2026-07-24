@@ -30,25 +30,6 @@ def referenced_figures(tex: str) -> list:
     return [os.path.splitext(os.path.basename(m.group(2)))[0]
             for m in _INCLUDEGRAPHICS.finditer(tex)]
 
-
-def extract_image_scales(tex: str, stem_index: dict | None = None) -> dict:
-    """Mapeia ``nome.png -> escala`` a partir dos ``\\includegraphics[scale=...]``.
-
-    O Pandoc descarta a opção ``scale``, então guardamos essa informação para
-    reaplicá-la como largura real no HTML (ver ``pipeline.apply_image_sizes``).
-    A chave é o nome real do arquivo (resolvido pela caixa) com extensão ``.png``.
-    """
-    stem_index = stem_index or {}
-    scales = {}
-    for match in _INCLUDEGRAPHICS.finditer(tex):
-        options = match.group(1) or ""
-        scale_match = re.search(r"scale=(\d+(?:\.\d+)?)", options)
-        if not scale_match:
-            continue
-        stem = _resolve_stem(match.group(2), stem_index)
-        scales[stem + ".png"] = float(scale_match.group(1))
-    return scales
-
 def _replace_insert_figure(match) -> str:
     options = match.group(1) or ""
     filename = match.group(2)

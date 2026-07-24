@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import re
 import shutil
 from dataclasses import dataclass, field
 
@@ -13,15 +12,11 @@ from . import template
 from .bibliography import format_references, parse_bib
 from .crossref import build_label_map
 from .html import build_outline, postprocess_html, tex_to_html
-from .latex import (
-    extract_image_scales,
-    extract_metadata,
-    preprocess_tex,
-    referenced_figures,
-)
+from .latex import extract_metadata, preprocess_tex, referenced_figures
 from .lint import lint_tex
 from .links import LinkRegistry
 from .text import strip_comments
+from .validation import find_duplicate_ids, validate_document
 
 
 @dataclass
@@ -30,42 +25,6 @@ class ConversionResult:
     html_file: str
     images: list = field(default_factory=list)
     warnings: list = field(default_factory=list)
-
-
-# Largura mínima (px) para uma figura não ficar minúscula na coluna larga da web.
-# O scale do LaTeX é relativo ao PDF (coluna estreita); numa página web larga uma
-# imagem com scale pequeno ficaria pequena demais.
-MIN_FIG_WIDTH = 280
-
-
-def apply_image_sizes(html: str, scales: dict, sizes: dict) -> str:
-    """Reaplica o ``scale`` (perdido pelo Pandoc) como largura real no HTML.
-
-    Largura = ``round(largura_natural_px * scale)``, com um piso de
-    ``MIN_FIG_WIDTH`` (sem nunca ampliar além da resolução real, para não borrar)
-    e ``max-width:100%`` para a imagem nunca estourar o container.
-    """
-    def repl(match):
-        tag = match.group(0)
-        src_match = re.search(r'src="([^"]+)"', tag)
-        if not src_match:
-            return tag
-        name = src_match.group(1)
-        scale = scales.get(name)
-        size = sizes.get(name)
-        if not scale or not size:
-            return tag
-        natural = size[0]
-        width = round(natural * scale)
-        if width < MIN_FIG_WIDTH:  # evita figura minúscula, mas sem upscale (borra)
-            width = min(MIN_FIG_WIDTH, natural)
-        width = max(1, width)
-        style = f"width:{width}px; max-width:100%; height:auto;"
-        if "style=" in tag:
-            return tag  # já tem estilo (ex.: largura via \textwidth) — não mexe
-        return tag[:-2] + f' style="{style}" />' if tag.endswith("/>") else tag[:-1] + f' style="{style}">'
-
-    return re.sub(r"<img\b[^>]*>", repl, html)
 
 
 def _find_source(article_dir: str, extension: str):
@@ -124,13 +83,12 @@ def convert_article(article_dir, output_dir=None, log=print) -> ConversionResult
     output_dir = os.path.abspath(output_dir)
     os.makedirs(output_dir, exist_ok=True)
 
-    # Converte as figuras para PNG primeiro — precisamos das dimensões para
-    # dimensionar as imagens no HTML (o Pandoc descarta o scale do LaTeX).
+    # Converte as figuras para PNG.
     figures_dir = images.find_figures_dir(article_dir)
-    converted, sizes = [], {}
+    converted = []
     if figures_dir:
         log(f"Pasta de figuras: {os.path.relpath(figures_dir, article_dir)}")
-        converted, img_warnings, sizes = images.convert_images_to_png(figures_dir, output_dir, log=log)
+        converted, img_warnings, _sizes = images.convert_images_to_png(figures_dir, output_dir, log=log)
         warnings.extend(img_warnings)
     else:
         warnings.append("Nenhuma pasta de figuras encontrada.")
@@ -149,7 +107,12 @@ def convert_article(article_dir, output_dir=None, log=print) -> ConversionResult
             log(f"Aviso: figura '{stem}' citada mas não encontrada.")
 
     labels, fig_order, tab_order = build_label_map(tex_clean)
-    scales = extract_image_scales(tex_clean, stem_index)
+
+    # Valida citações/referências/rótulos e avisa (sem interromper).
+    for w in validate_document(tex_clean, entries, labels):
+        warnings.append(w)
+        log(f"Aviso: {w}")
+
     registry = LinkRegistry()
     tex_pre = preprocess_tex(tex_raw, entries, labels, registry, stem_index)
 
@@ -166,12 +129,18 @@ def convert_article(article_dir, output_dir=None, log=print) -> ConversionResult
 
     html_body = postprocess_html(raw_html, fig_order, tab_order)
     html_body = registry.apply(html_body)
-    html_body = apply_image_sizes(html_body, scales, sizes)
 
     metadata = extract_metadata(tex_clean)
     menu_html = build_outline(html_body)
     references_html = format_references(entries)
     page = template.render_page(metadata, html_body, menu_html, references_html)
+
+    # Rede de segurança: se sobrou algum id duplicado na página final, avisa (um
+    # link poderia pular para o lugar errado).
+    for dup in find_duplicate_ids(page):
+        msg = f"Identificador duplicado no HTML: '{dup}' (verifique rótulos/chaves repetidos)."
+        warnings.append(msg)
+        log(f"Aviso: {msg}")
 
     html_file = os.path.join(output_dir, f"{base}.html")
     with open(html_file, "w", encoding="utf-8") as f:

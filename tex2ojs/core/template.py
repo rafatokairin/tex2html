@@ -79,6 +79,48 @@ CSS = """
         thead:before, thead:after { content: ""; display: table-row; }
         table { margin: 0 auto; border-collapse: collapse; }
         p#data { font-size: 12px; }
+
+        /* Imagens com altura uniforme; clicar abre em tela cheia (lightbox). */
+        .article-content figure img { max-height: 360px; width: auto; cursor: zoom-in; }
+        #lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.88);
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+            padding: 20px;
+        }
+        #lightbox img { max-width: 96%; max-height: 96%; box-shadow: 0 0 40px rgba(0,0,0,.6); }
+
+        /* Código (verbatim, lstlisting, minted, \\texttt, \\verb). */
+        code, pre { font-family: 'Consolas', 'Courier New', monospace; }
+        code { background: #f4f4f4; padding: 1px 5px; border-radius: 3px; font-size: .92em; }
+        pre { background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px;
+              padding: 12px 14px; overflow-x: auto; line-height: 1.45; text-align: left; }
+        pre code { background: none; padding: 0; }
+        div.sourceCode { overflow-x: auto; background: #f6f8fa; border: 1px solid #e1e4e8;
+              border-radius: 6px; margin: 14px 0; padding: 4px 10px; }
+        div.sourceCode pre { border: 0; background: none; padding: 8px 0; }
+        code span.kw { color: #007020; font-weight: bold; }
+        code span.dt { color: #902000; }
+        code span.dv, code span.bn, code span.fl { color: #40a070; }
+        code span.st, code span.ch, code span.sc, code span.vs { color: #4070a0; }
+        code span.co { color: #60a0b0; font-style: italic; }
+        code span.cf, code span.kw { color: #007020; font-weight: bold; }
+        code span.op { color: #666666; }
+        code span.fu { color: #06287e; }
+        code span.im { color: #008000; font-weight: bold; }
+        code span.va { color: #19177c; }
+        code span.pp { color: #bc7a00; }
+        code span.at { color: #7d9029; }
+
+        /* Notas de rodapé (\\footnote). */
+        section.footnotes { font-size: .85em; border-top: 1px solid #ccc;
+              margin-top: 26px; padding-top: 8px; color: #333; }
+
         .nomes-container { display: flex; gap: 10px; }
         .nomes-container a { float: left; display: flex; text-decoration: none; }
         .nomes-container .orcid-icon { height: 20px; margin-left: 5px; }
@@ -152,5 +194,18 @@ def render_page(metadata: dict, body_html: str, menu_html: str, references_html:
         <h1 id="article-references">References</h1>
         {references_html}
     </div>
+    <div id="lightbox" onclick="this.style.display='none'"><img alt=""></div>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {{
+        var box = document.getElementById("lightbox");
+        var big = box.querySelector("img");
+        document.querySelectorAll(".article-content figure img").forEach(function (img) {{
+            img.addEventListener("click", function () {{
+                big.src = img.currentSrc || img.src;
+                box.style.display = "flex";
+            }});
+        }});
+    }});
+    </script>
 </body>
 </html>"""
