@@ -121,38 +121,44 @@ def _authors_and_year(entry: dict):
     return label, year
 
 
-# Detecta um nome de autor escrito à mão imediatamente antes do \cite:
-#  - termina em "et al." / "et al.,"  (ex.: "Al-Hemoud et al., \cite{...}")
-#  - ou num sobrenome Capitalizado, com vírgula opcional (ex.: "Jeong, \cite{...}").
-_AUTHOR_BEFORE = re.compile(r"(?:et\s+al\.?|[A-ZÀ-Ý][A-Za-zÀ-ÿ.'\-]*),?\s*$")
+def _inside_open_paren(before: str) -> bool:
+    """True se a citação está dentro de um '(' aberto pelo autor (ainda sem fechar).
+
+    Conta parênteses no texto anterior (em prosa eles se equilibram; um '(' a mais
+    significa que estamos dentro de um grupo aberto, como numa lista de citações).
+    Usado para não duplicar parênteses (ex.: "Autor et al., (\\citeyear{...})").
+    """
+    return before.count("(") > before.count(")")
 
 
-def _author_written_before(before: str) -> bool:
-    if not before:
-        return False
-    return bool(_AUTHOR_BEFORE.search(before))
+# Cada comando de citação define O QUE mostrar (o autor escolhe o comando certo).
+# Cobrimos natbib E biblatex (textcite/parencite/autocite…).
+_TEXTUAL = {"citet", "citealt", "citealp", "textcite"}   # Autor (ano)
+# author-only / year-only são detectados por conterem "author"/"year" no nome.
+# Demais (cite, citep, parencite, autocite, footcite, …) -> "(Autor, ano)".
 
 
 def replace_citations(text: str, entries: list, registry) -> str:
-    """Substitui ``\\cite`` e ``\\citeauthor`` por citações no padrão da revista.
+    """Substitui os comandos de citação pelo formato da revista, honrando o tipo:
 
-    O HTML é guardado no ``registry`` atrás de um token de texto puro (ver
+    - ``\\cite``/``\\citep`` -> ``(Autor, ano)``
+    - ``\\citet``            -> ``Autor (ano)``
+    - ``\\citeauthor``       -> ``Autor``
+    - ``\\citeyear``         -> ``(ano)`` (só o ano — evita duplicar o nome quando o
+      autor já o escreveu à mão, ex.: "Hemoud et al., \\citeyear{...}")
+
+    O HTML vai para o ``registry`` atrás de um token de texto puro (ver
     ``links.LinkRegistry``); o token é trocado pelo HTML depois do Pandoc.
     """
     bib_by_key = {e["key"]: e for e in entries}
-    # Comandos "textuais" (Autor (ano)) vs "parentéticos" ((Autor, ano)).
-    _TEXTUAL = {"citeauthor", "citet", "citealt", "textcite"}
 
     def build(match):
-        cmd = match.group(1)
+        cmd = match.group(1).lower()
         keys = [k.strip() for k in match.group(2).split(",") if k.strip()]
+        author_only = "author" in cmd
+        year_only = "year" in cmd or "date" in cmd
         textual = cmd in _TEXTUAL
-        before = text[:match.start()].rstrip()
-        # Modo inteligente: se o autor já foi escrito à mão logo antes do \cite,
-        # mostramos só o ano (evita "Autor et al., (Autor et al., ano)").
-        author_before = not textual and _author_written_before(before)
-        # Se o autor já abriu parêntese "(\cite{...})", não abrimos outro.
-        open_before = before.endswith("(")
+        inside_parens = _inside_open_paren(text[:match.start()])
         parts = []
         for key in keys:
             entry = bib_by_key.get(key)
@@ -160,21 +166,25 @@ def replace_citations(text: str, entries: list, registry) -> str:
                 parts.append(f"[{key} - not found]")
                 continue
             label, year = _authors_and_year(entry)
-            link = f'<a href="#ref-{key}">{year}</a>'
-            if textual:
-                parts.append(f"{label} ({link})")
-            elif author_before:
-                parts.append(link)  # só o ano (autor já está no texto)
-            else:
-                parts.append(f"{label}, {link}")
+            year_link = f'<a href="#ref-{key}">{year}</a>'
+            if author_only:
+                parts.append(f'<a href="#ref-{key}">{label}</a>')
+            elif year_only:
+                parts.append(year_link)
+            elif textual:
+                parts.append(f"{label} ({year_link})")
+            else:  # cite, citep, parencite, autocite…
+                parts.append(f"{label}, {year_link}")
         joined = "; ".join(parts)
-        if textual or author_before or open_before:
-            return registry.token(joined)  # sem parênteses próprios
-        return registry.token(f"({joined})")
+        # \citet/\textcite/\citeauthor não levam parênteses externos; os demais
+        # recebem "(...)" só se ainda não estivermos dentro de parênteses do autor.
+        no_wrap = textual or author_only or inside_parens
+        return registry.token(joined if no_wrap else f"({joined})")
 
-    # Cobre \cite, \citep, \citet, \citeauthor, \citeyear… e argumentos opcionais
-    # como \cite[p. 5]{chave}.
-    return re.sub(r"\\(cite[a-zA-Z]*)\s*(?:\[[^\]]*\])*\{([^}]+)\}", build, text)
+    # Cobre natbib e biblatex: \cite, \citep, \citet, \citeauthor, \citeyear,
+    # \textcite, \parencite, \autocite, \footcite… variantes com ``*`` e
+    # argumentos opcionais como \cite[p. 5]{chave}.
+    return re.sub(r"\\([A-Za-z]*cite[A-Za-z]*)\*?\s*(?:\[[^\]]*\])*\{([^}]+)\}", build, text)
 
 
 # --------------------------------------------------------------------------- #

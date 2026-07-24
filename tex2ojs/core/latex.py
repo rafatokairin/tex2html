@@ -47,6 +47,21 @@ def _replace_insert_figure(match) -> str:
     )
 
 
+def _unwrap_makecell(text: str) -> str:
+    """Desembrulha ``\\makecell[..]{a\\\\b}`` / ``\\thead{...}`` mantendo o conteúdo.
+
+    O Pandoc não conhece o pacote ``makecell`` e DESCARTA o comando com o conteúdo
+    (perda silenciosa em células de tabela). Aqui mantemos o texto, trocando a
+    quebra ``\\\\`` interna por um espaço.
+    """
+    def repl(match):
+        inner = match.group(1)
+        return re.sub(r"\\\\\s*(?:\[[^\]]*\])?", " ", inner)
+
+    pattern = r"\\(?:makecell|thead)\s*(?:\[[^\]]*\])?\s*\{((?:[^{}]|\{[^{}]*\})*)\}"
+    return re.sub(pattern, repl, text)
+
+
 def _fix_includegraphics(text: str, stem_index: dict) -> str:
     """Força toda figura para ``nome.png`` sem prefixo de pasta (padrão do OJS).
 
@@ -124,6 +139,7 @@ def preprocess_tex(tex: str, entries: list, labels: dict, registry, stem_index: 
     content = content.replace("\\textsc", "\\text")
     content = _strip_layout_commands(content)
     content = re.sub(r"\\cline\{.*?\}", "", content)
+    content = _unwrap_makecell(content)
     content = re.sub(r"\\InsertFigure(\[.*?\])?\{(.*?)\}\{(.*?)\}\{(.*?)\}", _replace_insert_figure, content)
     content = _fix_includegraphics(content, stem_index)
 
