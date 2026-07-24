@@ -151,6 +151,85 @@ def preprocess_tex(tex: str, entries: list, labels: dict, registry, stem_index: 
 
 
 # --------------------------------------------------------------------------- #
+# Autores (nome completo + ORCID)
+# --------------------------------------------------------------------------- #
+
+def _strip_command(text: str, cmd: str) -> str:
+    """Remove ``\\cmd{...}`` (com chaves balanceadas, qualquer profundidade)."""
+    out = []
+    i = 0
+    token = "\\" + cmd
+    while True:
+        j = text.find(token, i)
+        if j == -1:
+            out.append(text[i:])
+            break
+        k = j + len(token)
+        if k < len(text) and text[k].isalpha():  # ex.: \thanksgiving — não é \thanks
+            out.append(text[i:k])
+            i = k
+            continue
+        while k < len(text) and text[k] in " \t\n":
+            k += 1
+        if k < len(text) and text[k] == "{":
+            depth, k = 1, k + 1
+            while k < len(text) and depth:
+                if text[k] == "{":
+                    depth += 1
+                elif text[k] == "}":
+                    depth -= 1
+                k += 1
+            out.append(text[i:j])
+            i = k
+        else:
+            out.append(text[i:j + len(token)])
+            i = j + len(token)
+    return "".join(out)
+
+
+def _clean_author_name(seg: str) -> str:
+    """Limpa o nome de um autor de marcadores de afiliação e de layout.
+
+    Remove ``$^2$``/``$^{1,2}$`` (afiliação em math), ``\\textsuperscript{}``,
+    quebras ``\\\\``/``\\\\[..]``, ``\\vspace{}``, ``\\orcidlink{}`` e superíndices
+    soltos — deixando só o nome legível.
+    """
+    seg = re.sub(r"\\orcidlink\s*\{[^}]*\}", "", seg)
+    seg = re.sub(r"\\textsuperscript\s*\{[^}]*\}", "", seg)
+    seg = re.sub(r"\\(?:inst|footnotemark|thanksmark|IEEEauthorrefmark)\s*\{[^}]*\}", "", seg)
+    seg = re.sub(r"\$[^$]*\$", "", seg)                 # $^2$, $^{1,2}$…
+    seg = re.sub(r"\\\\\s*(?:\[[^\]]*\])?", " ", seg)   # \\ e \\[-0.25cm] -> espaço
+    seg = re.sub(r"\\vspace\*?\s*\{[^}]*\}", "", seg)
+    seg = re.sub(r"\^\{?[\d,\s*†‡§¶]+\}?", "", seg)     # superíndices soltos ^2, ^{1,2}
+    return re.sub(r"\s+", " ", clean_latex(seg)).strip(" ,;.")
+
+
+def extract_authors(tex: str) -> list:
+    """Extrai ``[{name, orcid}]`` do bloco ``\\author{...}``.
+
+    Cada autor aparece como ``Nome\\thanks{...}\\email{...}\\orcidlink{ID}``,
+    separados por vírgula. As quebras ``\\\\`` são só layout (não separam autores),
+    então viram espaço — assim um nome quebrado em duas linhas não se divide.
+    """
+    block = extract_braced(tex, "author")
+    if not block:
+        return []
+    for cmd in ("thanks", "email", "footnote", "affiliation"):
+        block = _strip_command(block, cmd)
+    # Quebras de linha não separam autores: viram espaço antes de dividir por vírgula.
+    block = re.sub(r"\\\\\s*(?:\[[^\]]*\])?", " ", block)
+
+    authors = []
+    for seg in block.split(","):
+        orcid_match = re.search(r"\\orcidlink\s*\{([^}]*)\}", seg)
+        orcid = orcid_match.group(1).strip() if orcid_match else ""
+        name = _clean_author_name(seg)
+        if name:
+            authors.append({"name": name, "orcid": orcid})
+    return authors
+
+
+# --------------------------------------------------------------------------- #
 # Metadados do cabeçalho
 # --------------------------------------------------------------------------- #
 
@@ -175,6 +254,7 @@ def extract_metadata(tex: str) -> dict:
     return {
         "area": field("Area"),
         "title": title,
+        "authors": extract_authors(tex),
         "author_header": field("AuthorHeader"),
         "doi": field("DOI"),
         "received": field("ReceivedDate"),

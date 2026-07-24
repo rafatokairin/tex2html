@@ -16,7 +16,7 @@ from .latex import extract_metadata, preprocess_tex, referenced_figures
 from .lint import lint_tex
 from .links import LinkRegistry
 from .text import strip_comments
-from .validation import find_duplicate_ids, validate_document
+from .validation import find_broken_anchors, find_duplicate_ids, validate_document
 
 
 @dataclass
@@ -135,10 +135,14 @@ def convert_article(article_dir, output_dir=None, log=print) -> ConversionResult
     references_html = format_references(entries)
     page = template.render_page(metadata, html_body, menu_html, references_html)
 
-    # Rede de segurança: se sobrou algum id duplicado na página final, avisa (um
-    # link poderia pular para o lugar errado).
+    # Rede de segurança na página final.
     for dup in find_duplicate_ids(page):
         msg = f"Identificador duplicado no HTML: '{dup}' (verifique rótulos/chaves repetidos)."
+        warnings.append(msg)
+        log(f"Aviso: {msg}")
+    for anchor in find_broken_anchors(page):
+        msg = (f"Link interno sem destino: '#{anchor}' — o Pandoc pode não ter gerado a "
+               f"âncora dessa figura/tabela. Verifique no artigo.")
         warnings.append(msg)
         log(f"Aviso: {msg}")
 
@@ -148,7 +152,7 @@ def convert_article(article_dir, output_dir=None, log=print) -> ConversionResult
     log(f"HTML gerado: {os.path.basename(html_file)}")
 
     # Copia os assets estáticos da revista (referenciados no HTML).
-    for asset in ("Header.png", "orcid.png"):
+    for asset in ("Header.png",):
         src = asset_path(asset)
         if os.path.isfile(src):
             shutil.copyfile(src, os.path.join(output_dir, asset))

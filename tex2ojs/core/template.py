@@ -80,6 +80,17 @@ CSS = """
         table { margin: 0 auto; border-collapse: collapse; }
         p#data { font-size: 12px; }
 
+        /* Autores: nome + ícone ORCID (SVG) do tamanho da linha do texto. */
+        h3.authors { font-weight: 500; line-height: 1.8; }
+        .authors .author { white-space: nowrap; }
+        .authors .orcid-link { text-decoration: none; }
+        .orcid-icon {
+            height: 1em;
+            width: 1em;
+            vertical-align: -0.15em;
+            margin-left: 3px;
+        }
+
         /* Imagens com altura uniforme; clicar abre em tela cheia (lightbox). */
         .article-content figure img { max-height: 360px; width: auto; cursor: zoom-in; }
         #lightbox {
@@ -121,9 +132,6 @@ CSS = """
         section.footnotes { font-size: .85em; border-top: 1px solid #ccc;
               margin-top: 26px; padding-top: 8px; color: #333; }
 
-        .nomes-container { display: flex; gap: 10px; }
-        .nomes-container a { float: left; display: flex; text-decoration: none; }
-        .nomes-container .orcid-icon { height: 20px; margin-left: 5px; }
         @media (max-width: 992px) {
             .article-content { margin: 10px; }
             header { display: none; }
@@ -137,9 +145,40 @@ CSS = """
 _SEARCH_ACTION = "https://ojs.uel.br/revistas/uel/index.php/semexatas/search/index"
 
 
+# Logo oficial do ORCID (iD) como SVG inline — sempre renderiza, sem depender de
+# um arquivo de imagem (que poderia não carregar e mostrar o texto "ORCID").
+ORCID_SVG = (
+    '<svg class="orcid-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" '
+    'role="img" aria-label="ORCID">'
+    '<path fill="#A6CE39" d="M256 128c0 70.7-57.3 128-128 128S0 198.7 0 128 57.3 0 128 0s128 57.3 128 128z"/>'
+    '<path fill="#FFF" d="M86.3 186.2H70.9V79.1h15.4v107.1z"/>'
+    '<path fill="#FFF" d="M108.9 79.1h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.4h24.5c34.9 0 42.9-26.5 42.9-39.8 0-21.5-13.7-39.7-43.7-39.7h-23.7v79.5z"/>'
+    '<path fill="#FFF" d="M88.7 56.8c0 5.5-4.5 10.1-10.1 10.1s-10.1-4.6-10.1-10.1c0-5.6 4.5-10.1 10.1-10.1 5.6 0 10.1 4.6 10.1 10.1z"/>'
+    "</svg>"
+)
+
+
+def _render_authors(metadata: dict) -> str:
+    """Nomes completos dos autores, cada um com o ícone ORCID linkado ao lado."""
+    authors = metadata.get("authors") or []
+    if not authors:
+        return metadata.get("author_header", "")
+    partes = []
+    for a in authors:
+        nome = a["name"]
+        orcid = a.get("orcid", "").strip()
+        if orcid:
+            url = orcid if orcid.startswith("http") else f"https://orcid.org/{orcid}"
+            nome += (f' <a class="orcid-link" href="{url}" target="_blank" '
+                     f'title="ORCID de {nome}">{ORCID_SVG}</a>')
+        partes.append(f'<span class="author">{nome}</span>')
+    return ", ".join(partes)
+
+
 def render_page(metadata: dict, body_html: str, menu_html: str, references_html: str) -> str:
     """Monta a página HTML completa a partir das partes já processadas."""
     m = metadata
+    authors_html = _render_authors(m)
     return f"""<!DOCTYPE html>
 <html lang="en-US">
 <head>
@@ -185,7 +224,7 @@ def render_page(metadata: dict, body_html: str, menu_html: str, references_html:
     </div>
     <div class="article-content">
         <h1>{m['title']}</h1>
-        <h3>{m['author_header']}</h3>
+        <h3 class="authors">{authors_html}</h3>
         <p><strong>DOI</strong> {m['doi']}</p>
         <p><strong>Citation</strong> {m['citation']}</p>
         <p id="data"><strong>Received:</strong> {m['received']} <strong>Received in revised for:</strong> {m['revised']} <strong>Accepted:</strong> {m['accepted']} <strong>Available online:</strong> {m['published']}</p>

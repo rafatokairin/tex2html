@@ -19,6 +19,26 @@ def clean_latex(text: str) -> str:
     if not text:
         return ""
     text = text.replace("~", " ")
+
+    # Preserva matemática inline ($...$) para o MathJax renderizar (ex.: PM$_{10}$
+    # em títulos de referência). Protegemos antes de limpar as chaves e comandos.
+    text = text.replace("\\$", "\x02")  # cifrão literal (moeda) protegido
+    math = []
+
+    def _protect(m):
+        math.append(m.group(1))
+        return f"\x01{len(math) - 1}\x01"
+
+    text = re.sub(r"\$([^$]+)\$", _protect, text)
+
+    text = re.sub(r"\\\\\s*(?:\[[^\]]*\])?", " ", text)  # quebras \\ e \\[..] -> espaço
+    # Comandos de espaçamento cujo ARGUMENTO deve sumir (senão "vira texto", ex.:
+    # \vspace{-0.05cm} deixava "-0.05cm"). Diferente de \textit{x}, cujo conteúdo fica.
+    text = re.sub(
+        r"\\(?:vspace|hspace|vskip|hskip|rule|phantom|hphantom|vphantom|kern|addvspace)"
+        r"\*?\s*(?:\[[^\]]*\])?(?:\s*\{[^{}]*\})+",
+        "", text,
+    )
     for _ in range(3):  # resolve comandos aninhados
         new = re.sub(r"\\[a-zA-Z]+\*?\s*\{([^{}]*)\}", r"\1", text)
         if new == text:
@@ -28,6 +48,10 @@ def clean_latex(text: str) -> str:
     text = text.replace("{", "").replace("}", "")
     text = text.replace("\\&", "&").replace("\\%", "%").replace("\\_", "_")
     text = text.replace("---", "—").replace("--", "–")
+
+    # Restaura a matemática como \( ... \) (delimitador que o MathJax processa).
+    text = re.sub(r"\x01(\d+)\x01", lambda m: "\\(" + math[int(m.group(1))] + "\\)", text)
+    text = text.replace("\x02", "$")
     return text.strip()
 
 

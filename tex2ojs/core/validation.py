@@ -54,3 +54,10 @@ def find_duplicate_ids(html: str) -> list:
     """Rede de segurança: retorna ids repetidos no HTML final (não deveria haver)."""
     ids = re.findall(r'\sid="([^"]+)"', html)
     return [i for i, c in Counter(ids).items() if c > 1]
+
+
+def find_broken_anchors(html: str) -> list:
+    """Retorna links internos (href="#...") que não têm um id de destino no HTML."""
+    ids = set(re.findall(r'\sid="([^"]+)"', html))
+    links = {m for m in re.findall(r'href="#([^"]+)"', html) if m}
+    return sorted(links - ids)
