@@ -1,6 +1,6 @@
 # Como gerar o executável (.exe) para Windows
 
-O objetivo é entregar para a professora **um único arquivo `Tex2HTML.exe`** que ela
+O objetivo é entregar **um único arquivo `Tex2HTML.exe`** que ela
 abre com dois cliques, sem precisar instalar Python, Pandoc ou qualquer biblioteca.
 
 > **Importante:** o `.exe` do Windows precisa ser gerado **no Windows**. O
@@ -28,10 +28,9 @@ abre com dois cliques, sem precisar instalar Python, Pandoc ou qualquer bibliote
    > O `build.spec` já usa o `main.py` como ponto de entrada e embute o pacote
    > `tex2ojs`, os assets (`assets/`) e o Pandoc.
 
-4. O arquivo final estará em **`dist\Tex2HTML.exe`**. É só esse arquivo que a
-   professora precisa — pode copiar para o Desktop dela e abrir com dois cliques.
+4. O arquivo final estará em **`dist\Tex2HTML.exe`**. É só esse arquivo — pode copiar para o Desktop dela e abrir com dois cliques.
 
-## Como a professora usa
+## Como usar
 
 1. Abre o `Tex2HTML.exe`.
 2. Clica em **"Selecionar pasta…"** e escolhe a pasta do artigo (ex.: `Artigo46`,
@@ -48,6 +47,6 @@ abre com dois cliques, sem precisar instalar Python, Pandoc ou qualquer bibliote
 ## Observações
 
 - O Pandoc já vem embutido no executável (via `pypandoc_binary`), então a máquina
-  da professora **não precisa** ter o Pandoc instalado.
+  **não precisa** ter o Pandoc instalado.
 - Se o antivírus reclamar do `.exe` (comum com PyInstaller), é falso positivo;
   pode liberar/assinar o binário.
