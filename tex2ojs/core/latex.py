@@ -47,6 +47,109 @@ def _replace_insert_figure(match) -> str:
     )
 
 
+_INPUT_RE = re.compile(r"\\(?:input|include|subfile)\s*\{([^}]+)\}")
+
+
+def resolve_inputs(tex: str, base_dir: str, depth: int = 0, seen=None) -> str:
+    """Inclui o conteúdo de ``\\input{arquivo}`` / ``\\include{arquivo}`` (recursivo).
+
+    O LaTeX permite dividir o artigo em vários .tex; sem isso, o conteúdo incluído
+    sumiria do HTML. Arquivos ausentes são ignorados; evita loop com ``seen``.
+    """
+    if seen is None:
+        seen = set()
+    if depth > 15:
+        return tex
+
+    def repl(match):
+        name = match.group(1).strip()
+        candidate = name if os.path.splitext(name)[1] else name + ".tex"
+        path = os.path.normpath(os.path.join(base_dir, candidate))
+        if not os.path.isfile(path) or path in seen:
+            return ""
+        seen.add(path)
+        sub = strip_comments(open(path, encoding="utf-8", errors="ignore").read())
+        return resolve_inputs(sub, os.path.dirname(path), depth + 1, seen)
+
+    return _INPUT_RE.sub(repl, tex)
+
+
+def _unwrap_boxes(text: str) -> str:
+    """Desembrulha comandos de "caixa" mantendo o CONTEÚDO (último argumento).
+
+    O Pandoc descarta o conteúdo de ``\\resizebox``/``\\scalebox``/``\\raisebox``/
+    ``\\rotatebox`` — e, pior, uma tabela dentro de ``\\resizebox{...}{...}{ ... }``
+    faz o Pandoc dropar a tabela inteira. Aqui removemos o comando e seus argumentos
+    de tamanho/ângulo, preservando o conteúdo (tabela, imagem, etc.).
+
+    ``specs``: nº de argumentos obrigatórios ``{}`` ANTES do conteúdo.
+    """
+    specs = {"resizebox": 2, "scalebox": 1, "raisebox": 1, "rotatebox": 1, "reflectbox": 0}
+    for name, nargs in specs.items():
+        text = _unwrap_one_box(text, name, nargs)
+    return text
+
+
+def _unwrap_one_box(text: str, name: str, nargs: int) -> str:
+    token = "\\" + name
+    out = []
+    i = 0
+    n = len(text)
+
+    def skip_ws(p):
+        while p < n and text[p] in " \t\n":
+            p += 1
+        return p
+
+    def skip_braced(p):
+        """Se em '{', pula o grupo balanceado; devolve (fim, conteudo_interno) ou (None,None)."""
+        if p >= n or text[p] != "{":
+            return None, None
+        depth, p, start = 1, p + 1, p + 1
+        while p < n and depth:
+            if text[p] == "{":
+                depth += 1
+            elif text[p] == "}":
+                depth -= 1
+            p += 1
+        return p, text[start:p - 1]
+
+    while True:
+        j = text.find(token, i)
+        if j == -1:
+            out.append(text[i:])
+            break
+        k = j + len(token)
+        if k < n and text[k].isalpha():  # não é exatamente este comando
+            out.append(text[i:k])
+            i = k
+            continue
+        p = skip_ws(k)
+        while p < n and text[p] == "[":  # argumentos opcionais [..]
+            q = text.find("]", p)
+            if q == -1:
+                break
+            p = skip_ws(q + 1)
+        ok = True
+        for _ in range(nargs):  # argumentos obrigatórios de tamanho/ângulo
+            p = skip_ws(p)
+            end, _inner = skip_braced(p)
+            if end is None:
+                ok = False
+                break
+            p = end
+        p = skip_ws(p)
+        end, content = (skip_braced(p) if ok else (None, None))
+        if end is None:  # padrão inesperado: deixa como está
+            out.append(text[i:k])
+            i = k
+            continue
+        out.append(text[i:j])
+        out.append(content)  # mantém só o conteúdo
+        i = end
+    return "".join(out)
+
+
 def _unwrap_makecell(text: str) -> str:
     """Desembrulha ``\\makecell[..]{a\\\\b}`` / ``\\thead{...}`` mantendo o conteúdo.
 
@@ -139,6 +242,7 @@ def preprocess_tex(tex: str, entries: list, labels: dict, registry, stem_index: 
     content = content.replace("\\textsc", "\\text")
     content = _strip_layout_commands(content)
     content = re.sub(r"\\cline\{.*?\}", "", content)
+    content = _unwrap_boxes(content)     # \resizebox/\raisebox/… -> mantém conteúdo
     content = _unwrap_makecell(content)
     content = re.sub(r"\\InsertFigure(\[.*?\])?\{(.*?)\}\{(.*?)\}\{(.*?)\}", _replace_insert_figure, content)
     content = _fix_includegraphics(content, stem_index)
@@ -155,7 +259,6 @@ def preprocess_tex(tex: str, entries: list, labels: dict, registry, stem_index: 
             insert_at = idx + len(marker)
             content = content[:insert_at] + "\n" + block + "\n" + content[insert_at:]
 
-    content = content.replace("\\resizebox{\\columnwidth}{!}", "")
     content = content.replace("\\columnwidth", "\\textwidth")
     content = re.sub(
         r"\\begin\{([^}]*)\} \\label\{([^}]*)\}",

@@ -12,7 +12,7 @@ from . import template
 from .bibliography import format_references, parse_bib
 from .crossref import build_label_map
 from .html import build_outline, postprocess_html, tex_to_html
-from .latex import extract_metadata, preprocess_tex, referenced_figures
+from .latex import extract_metadata, preprocess_tex, referenced_figures, resolve_inputs
 from .lint import lint_tex
 from .links import LinkRegistry
 from .text import strip_comments
@@ -69,6 +69,8 @@ def convert_article(article_dir, output_dir=None, log=print) -> ConversionResult
 
     with open(tex_path, "r", encoding="utf-8") as f:
         tex_raw = f.read()
+    # Inclui arquivos referenciados via \input{...}/\include{...} (documento dividido).
+    tex_raw = resolve_inputs(tex_raw, os.path.dirname(tex_path))
     bib_text = ""
     if bib_path:
         with open(bib_path, "r", encoding="utf-8") as f:
