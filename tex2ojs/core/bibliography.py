@@ -90,6 +90,57 @@ def parse_bib(text: str) -> list:
     return entries
 
 
+
+
+
+
+
+
+
+def extract_citation_keys(tex: str) -> set[str]:
+    """
+        Retorna o conjunto de todas as chaves BibTeX efetivamente citadas
+        no documento LaTeX.
+
+        Suporta:
+            \\cite
+            \\citep
+            \\citet
+            \\citeauthor
+            \\citeyear
+            \\textcite
+            \\parencite
+            \\autocite
+            \\footcite
+        inclusive com argumentos opcionais.
+    """
+
+    pattern = re.compile(
+        r"\\[A-Za-z]*cite[A-Za-z]*\*?"
+        r"(?:\[[^\]]*\])*"
+        r"\{([^}]*)\}"
+    )
+
+    keys = set()
+
+    for match in pattern.finditer(tex):
+
+        for key in match.group(1).split(","):
+
+            key = key.strip()
+
+            if key:
+                keys.add(key)
+
+    return keys
+
+
+
+
+
+
+
+
 # --------------------------------------------------------------------------- #
 # Citações no texto (\cite e \citeauthor)
 # --------------------------------------------------------------------------- #
@@ -239,9 +290,10 @@ def _format_authors(raw: str) -> str:
 
 
 def format_references(entries: list) -> str:
-    """Formata a lista de referências (uma ``<p>`` por entrada, âncora ``#chave``) e ordena por nome
-       (sobrenome antes).
-
+    """Formata a lista de referências (uma ``<p>`` por entrada, âncora ``#chave``). 
+    
+    Segue um estilo APA-simplificado, com iniciais dos autores, título do
+    periódico/livro em itálico, volume(número), páginas e DOI/URL clicável.
     """
 
     import unicodedata
@@ -252,7 +304,7 @@ def format_references(entries: list) -> str:
         """
         Normaliza nome para ordenação alfabética.
 
-        Aceita:
+        Exemplo:
             Nielsen, Jakob
             Jakob Nielsen
             Georgi Gerganov
