@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from ..media import images
 from ..resources import asset_path
 from . import template
-from .bibliography import format_references, parse_bib
+from .bibliography import format_references, parse_bib, extract_citation_keys
 from .crossref import build_label_map
 from .html import build_outline, postprocess_html, tex_to_html
 from .latex import extract_metadata, preprocess_tex, referenced_figures, resolve_inputs
@@ -77,8 +77,37 @@ def convert_article(article_dir, output_dir=None, log=print) -> ConversionResult
             bib_text = f.read()
 
     entries = parse_bib(bib_text) if bib_text else []
+
+    # Bloco responsável por remover das refrências finais os .bib não citados no texto corrido 
+    #{ 
+    used_keys = extract_citation_keys(tex_raw)
+
+    unused = [
+        e["key"]
+        for e in entries
+        if e["key"] not in used_keys
+    ]
+
+    entries = [
+        e
+        for e in entries
+        if e["key"] in used_keys
+    ]
+
     log(f"Referências encontradas: {len(entries)}")
 
+    if unused:
+
+        log(
+            f"{len(unused)} referências do .bib não são citadas e foram ignoradas."
+        )
+
+        for key in unused:
+            warnings.append(
+                f"Referência '{key}' está no .bib mas não é citada no artigo."
+            )
+    #}
+    
     base = os.path.basename(article_dir.rstrip(os.sep)) or "artigo"
     if output_dir is None:
         output_dir = os.path.join(os.path.dirname(article_dir), f"{base}_OJS")

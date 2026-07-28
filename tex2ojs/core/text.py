@@ -8,6 +8,60 @@ from __future__ import annotations
 
 import re
 
+# Bloco para formatar caracteres escapados que estavam indo para as referências sem serem processados
+def fix_latex_accents(text: str) -> str:
+    """Converte acentos escritos em LaTeX para caracteres Unicode.
+    Processar texto das entradas do .bib
+    """
+
+    replacements = {
+        r"\'a": "á",
+        r"\'e": "é",
+        r"\'i": "í",
+        r"\'o": "ó",
+        r"\'u": "ú",
+        r"\'A": "Á",
+        r"\'E": "É",
+        r"\'I": "Í",
+        r"\'O": "Ó",
+        r"\'U": "Ú",
+
+        r"\`a": "à",
+        r"\`e": "è",
+        r"\`i": "ì",
+        r"\`o": "ò",
+        r"\`u": "ù",
+
+        r"\~a": "ã",
+        r"\~o": "õ",
+        r"\~A": "Ã",
+        r"\~O": "Õ",
+
+        r"\c{c}": "ç",
+        r"\c C": "Ç",
+
+        r"\"a": "ä",
+        r"\"e": "ë",
+        r"\"i": "ï",
+        r"\"o": "ö",
+        r"\"u": "ü",
+    }
+
+    for latex, unicode_char in replacements.items():
+        text = text.replace(latex, unicode_char)
+
+    # Casos comuns com chaves: {\~a}, {\'e}, etc.
+    text = text.replace(r"{\~a}", "ã")
+    text = text.replace(r"{\~o}", "õ")
+    text = text.replace(r"{\'a}", "á")
+    text = text.replace(r"{\'e}", "é")
+    text = text.replace(r"{\'i}", "í")
+    text = text.replace(r"{\'o}", "ó")
+    text = text.replace(r"{\'u}", "ú")
+    text = text.replace(r"{\c{c}}", "ç")
+
+    return text
+
 
 def clean_latex(text: str) -> str:
     """Remove comandos LaTeX simples de um trecho de texto.
@@ -18,6 +72,7 @@ def clean_latex(text: str) -> str:
     """
     if not text:
         return ""
+    text = fix_latex_accents(text)    
     text = text.replace("~", " ")
 
     # Preserva matemática inline ($...$) para o MathJax renderizar (ex.: PM$_{10}$

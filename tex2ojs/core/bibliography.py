@@ -90,6 +90,57 @@ def parse_bib(text: str) -> list:
     return entries
 
 
+
+
+
+
+
+
+
+def extract_citation_keys(tex: str) -> set[str]:
+    """
+        Retorna o conjunto de todas as chaves BibTeX efetivamente citadas
+        no documento LaTeX.
+
+        Suporta:
+            \\cite
+            \\citep
+            \\citet
+            \\citeauthor
+            \\citeyear
+            \\textcite
+            \\parencite
+            \\autocite
+            \\footcite
+        inclusive com argumentos opcionais.
+    """
+
+    pattern = re.compile(
+        r"\\[A-Za-z]*cite[A-Za-z]*\*?"
+        r"(?:\[[^\]]*\])*"
+        r"\{([^}]*)\}"
+    )
+
+    keys = set()
+
+    for match in pattern.finditer(tex):
+
+        for key in match.group(1).split(","):
+
+            key = key.strip()
+
+            if key:
+                keys.add(key)
+
+    return keys
+
+
+
+
+
+
+
+
 # --------------------------------------------------------------------------- #
 # Citações no texto (\cite e \citeauthor)
 # --------------------------------------------------------------------------- #
@@ -239,68 +290,210 @@ def _format_authors(raw: str) -> str:
 
 
 def format_references(entries: list) -> str:
-    """Formata a lista de referências (uma ``<p>`` por entrada, âncora ``#chave``).
-
+    """Formata a lista de referências (uma ``<p>`` por entrada, âncora ``#chave``). 
+    
     Segue um estilo APA-simplificado, com iniciais dos autores, título do
     periódico/livro em itálico, volume(número), páginas e DOI/URL clicável.
     """
+
+    import unicodedata
+
+
+    # Ordenação alfabética pelo sobrenome/primeiro elemento relevante do autor
+    def normalize_sort_name(name):
+        """
+        Normaliza nome para ordenação alfabética.
+
+        Exemplo:
+            Nielsen, Jakob
+            Jakob Nielsen
+            Georgi Gerganov
+            Everest, F. Alton and Pohlmann, Ken C.
+        """
+
+        name = clean_latex(name).strip()
+
+        if not name:
+            return "zzz"
+
+
+        # Remove acentos apenas para comparação
+        name = unicodedata.normalize("NFKD", name)
+        name = "".join(
+            c for c in name
+            if not unicodedata.combining(c)
+        )
+
+
+        # Caso BibTeX: Sobrenome, Nome
+        if "," in name:
+            surname = name.split(",")[0].strip()
+
+        # Caso BibTeX: Nome Sobrenome
+        else:
+            parts = name.split()
+            surname = parts[-1] if parts else name
+
+
+        return surname.lower()
+
+
+    # Ordena antes da geração do HTML
+    entries = sorted(
+        entries,
+        key=lambda e: normalize_sort_name(
+            e.get("author", "").split(" and ")[0]
+        )
+    )
+
+
     out = []
     seen = set()
+
     for info in entries:
-        if info["key"] in seen:  # chave duplicada no .bib: mantém só a 1ª (evita id repetido)
+
+        if info["key"] in seen:
             continue
+
         seen.add(info["key"])
+
         etype = info.get("type", "")
+
         get = lambda k: clean_latex(info.get(k, ""))
+
         parts = []
 
+
         authors = _format_authors(info.get("author", ""))
+
         if authors:
-            parts.append(authors + ("" if authors.endswith(".") else "."))
+            parts.append(
+                authors + ("" if authors.endswith(".") else ".")
+            )
+
+
         if get("year"):
-            parts.append(f"({get('year')}).")
+            parts.append(
+                f"({get('year')})."
+            )
+
 
         title = get("title")
-        if title:
-            parts.append(f"<em>{title}</em>." if etype in _STANDALONE_TYPES else f"{title}.")
 
-        journal, booktitle = get("journal"), get("booktitle")
-        vol, num, pages = get("volume"), get("number"), get("pages")
+        if title:
+            if etype in _STANDALONE_TYPES:
+                parts.append(
+                    f"<em>{title}</em>."
+                )
+            else:
+                parts.append(
+                    f"{title}."
+                )
+
+
+        journal = get("journal")
+        booktitle = get("booktitle")
+        vol = get("volume")
+        num = get("number")
+        pages = get("pages")
+
+
         if journal:
+
             s = f"<em>{journal}</em>"
+
             if vol:
                 s += f", <em>{vol}</em>"
+
             if num:
                 s += f"({num})"
+
             if pages:
                 s += f", {pages}"
+
             parts.append(s + ".")
+
+
         elif booktitle:
+
             s = f"In <em>{booktitle}</em>"
+
             if pages:
                 s += f" (pp. {pages})"
+
             parts.append(s + ".")
+
             if get("publisher"):
-                parts.append(f"{get('publisher')}.")
+                parts.append(
+                    f"{get('publisher')}."
+                )
+
+
         else:
-            for field in ("publisher", "institution", "school", "organization"):
+
+            for field in (
+                "publisher",
+                "institution",
+                "school",
+                "organization"
+            ):
+
                 if get(field):
-                    parts.append(f"{get(field)}.")
+                    parts.append(
+                        f"{get(field)}."
+                    )
                     break
+
+
             if pages and not journal:
-                parts.append(f"pp. {pages}.")
+                parts.append(
+                    f"pp. {pages}."
+                )
 
-        if etype in _STANDALONE_TYPES and get("howpublished") and not (journal or booktitle):
-            parts.append(f"{get('howpublished')}.")
 
-        doi, url = get("doi"), get("url")
+        if (
+            etype in _STANDALONE_TYPES
+            and get("howpublished")
+            and not (journal or booktitle)
+        ):
+            parts.append(
+                f"{get('howpublished')}."
+            )
+
+
+        doi = get("doi")
+        url = get("url")
+
+
         if doi:
-            parts.append(f'<a target="_blank" href="https://doi.org/{doi}">https://doi.org/{doi}</a>')
-        elif url:
-            parts.append(f'<a target="_blank" href="{url}">{url}</a>')
-        if get("note"):
-            parts.append(f"{get('note')}.")
 
-        body = " ".join(p for p in parts if p)
-        out.append(f'<p id="ref-{info["key"]}">{body}</p>')
+            parts.append(
+                f'<a target="_blank" href="https://doi.org/{doi}">'
+                f'https://doi.org/{doi}</a>'
+            )
+
+        elif url:
+
+            parts.append(
+                f'<a target="_blank" href="{url}">'
+                f'{url}</a>'
+            )
+
+
+        if get("note"):
+            parts.append(
+                f"{get('note')}."
+            )
+
+
+        body = " ".join(
+            p for p in parts if p
+        )
+
+
+        out.append(
+            f'<p id="ref-{info["key"]}">{body}</p>'
+        )
+
+
     return "".join(out)
